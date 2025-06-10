@@ -1,0 +1,445 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import Header from 'components/ui/Header';
+import Icon from 'components/AppIcon';
+
+import ArticleCard from './components/ArticleCard';
+import ArticleTable from './components/ArticleTable';
+import FilterSidebar from './components/FilterSidebar';
+import BulkActionsToolbar from './components/BulkActionsToolbar';
+
+const ArticlesManagement = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // State management
+  const [viewMode, setViewMode] = useState('card');
+  const [selectedArticles, setSelectedArticles] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  
+  // Filter states
+  const [filters, setFilters] = useState({
+    authors: [],
+    contentTypes: ['news', 'blog'],
+    dateRange: {
+      start: '',
+      end: ''
+    },
+    status: 'all'
+  });
+
+  // Mock articles data
+  const mockArticles = [
+    {
+      id: 1,
+      title: "Breaking: Major Tech Company Announces Revolutionary AI Breakthrough",
+      author: "Sarah Johnson",
+      date: "2024-01-15",
+      type: "news",
+      status: "published",
+      thumbnail: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop",
+      excerpt: "A groundbreaking development in artificial intelligence promises to transform how we interact with technology in our daily lives.",
+      readTime: "5 min read",
+      views: 12500,
+      category: "Technology"
+    },
+    {
+      id: 2,
+      title: "The Future of Remote Work: Trends and Predictions for 2024",
+      author: "Michael Chen",
+      date: "2024-01-14",
+      type: "blog",
+      status: "published",
+      thumbnail: "https://images.pexels.com/photos/4226140/pexels-photo-4226140.jpeg?w=400&h=250&fit=crop",
+      excerpt: "Exploring the evolving landscape of remote work and what organizations need to know to stay competitive.",
+      readTime: "8 min read",
+      views: 8750,
+      category: "Business"
+    },
+    {
+      id: 3,
+      title: "Climate Change Summit Reaches Historic Agreement",
+      author: "Emma Rodriguez",
+      date: "2024-01-13",
+      type: "news",
+      status: "published",
+      thumbnail: "https://images.pixabay.com/photo/2013/07/18/20/26/sea-164989_1280.jpg?w=400&h=250&fit=crop",
+      excerpt: "World leaders unite on ambitious climate targets in what experts call the most significant environmental agreement in decades.",
+      readTime: "6 min read",
+      views: 15200,
+      category: "Environment"
+    },
+    {
+      id: 4,
+      title: "Cryptocurrency Market Analysis: What Investors Need to Know",
+      author: "David Park",
+      date: "2024-01-12",
+      type: "blog",
+      status: "draft",
+      thumbnail: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&h=250&fit=crop",
+      excerpt: "A comprehensive analysis of current cryptocurrency trends and investment strategies for the modern portfolio.",
+      readTime: "12 min read",
+      views: 0,
+      category: "Finance"
+    },
+    {
+      id: 5,
+      title: "Healthcare Innovation: New Treatment Shows Promise",
+      author: "Dr. Lisa Thompson",
+      date: "2024-01-11",
+      type: "news",
+      status: "published",
+      thumbnail: "https://images.pexels.com/photos/3938023/pexels-photo-3938023.jpeg?w=400&h=250&fit=crop",
+      excerpt: "Medical researchers announce breakthrough treatment that could revolutionize patient care for chronic conditions.",
+      readTime: "7 min read",
+      views: 9800,
+      category: "Health"
+    },
+    {
+      id: 6,
+      title: "The Art of Digital Storytelling in Modern Marketing",
+      author: "Jennifer Walsh",
+      date: "2024-01-10",
+      type: "blog",
+      status: "published",
+      thumbnail: "https://images.pixabay.com/photo/2017/01/29/21/16/nurse-2017825_1280.jpg?w=400&h=250&fit=crop",
+      excerpt: "How brands are leveraging narrative techniques to create compelling digital experiences that resonate with audiences.",
+      readTime: "10 min read",
+      views: 6400,
+      category: "Marketing"
+    },
+    {
+      id: 7,
+      title: "Space Exploration Milestone: Mars Mission Update",
+      author: "Robert Kim",
+      date: "2024-01-09",
+      type: "news",
+      status: "published",
+      thumbnail: "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=400&h=250&fit=crop",
+      excerpt: "Latest developments from the Mars exploration mission reveal fascinating discoveries about the Red Planet\'s geology.",
+      readTime: "9 min read",
+      views: 18700,
+      category: "Science"
+    },
+    {
+      id: 8,
+      title: "Sustainable Fashion: The Rise of Eco-Conscious Brands",
+      author: "Maria Santos",
+      date: "2024-01-08",
+      type: "blog",
+      status: "review",
+      thumbnail: "https://images.pexels.com/photos/996329/pexels-photo-996329.jpeg?w=400&h=250&fit=crop",
+      excerpt: "Examining how fashion brands are embracing sustainability and what consumers can do to support ethical fashion choices.",
+      readTime: "11 min read",
+      views: 0,
+      category: "Lifestyle"
+    }
+  ];
+
+  // Get unique authors for filter
+  const availableAuthors = useMemo(() => {
+    return [...new Set(mockArticles.map(article => article.author))];
+  }, []);
+
+  // Filter and sort articles
+  const filteredAndSortedArticles = useMemo(() => {
+    let filtered = mockArticles.filter(article => {
+      // Search filter
+      if (searchQuery && !article.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          !article.author.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          !article.excerpt.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+
+      // Author filter
+      if (filters.authors.length > 0 && !filters.authors.includes(article.author)) {
+        return false;
+      }
+
+      // Content type filter
+      if (!filters.contentTypes.includes(article.type)) {
+        return false;
+      }
+
+      // Date range filter
+      if (filters.dateRange.start && article.date < filters.dateRange.start) {
+        return false;
+      }
+      if (filters.dateRange.end && article.date > filters.dateRange.end) {
+        return false;
+      }
+
+      // Status filter
+      if (filters.status !== 'all' && article.status !== filters.status) {
+        return false;
+      }
+
+      return true;
+    });
+
+    // Sort articles
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 'author':
+          aValue = a.author.toLowerCase();
+          bValue = b.author.toLowerCase();
+          break;
+        case 'date':
+          aValue = new Date(a.date);
+          bValue = new Date(b.date);
+          break;
+        case 'views':
+          aValue = a.views;
+          bValue = b.views;
+          break;
+        default:
+          aValue = a.date;
+          bValue = b.date;
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    return filtered;
+  }, [mockArticles, searchQuery, filters, sortBy, sortOrder]);
+
+  // Handle URL search params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+  }, [location.search]);
+
+  // Handle article selection
+  const handleSelectArticle = (articleId) => {
+    setSelectedArticles(prev => 
+      prev.includes(articleId) 
+        ? prev.filter(id => id !== articleId)
+        : [...prev, articleId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedArticles.length === filteredAndSortedArticles.length) {
+      setSelectedArticles([]);
+    } else {
+      setSelectedArticles(filteredAndSortedArticles.map(article => article.id));
+    }
+  };
+
+  // Handle bulk actions
+  const handleBulkAction = (action) => {
+    setIsLoading(true);
+    setTimeout(() => {
+      console.log(`Performing ${action} on articles:`, selectedArticles);
+      setSelectedArticles([]);
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  // Handle individual article actions
+  const handleArticleAction = (action, articleId) => {
+    console.log(`Performing ${action} on article:`, articleId);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <div className="pt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Page Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-text-primary mb-2">Articles Management</h1>
+            <p className="text-text-secondary">Manage and organize your news articles and blog posts</p>
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Desktop Sidebar */}
+            <div className="hidden lg:block lg:w-80 flex-shrink-0">
+              <FilterSidebar
+                filters={filters}
+                setFilters={setFilters}
+                availableAuthors={availableAuthors}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+              />
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 min-w-0">
+              {/* Toolbar */}
+              <div className="bg-surface rounded-lg border border-border p-4 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    {/* Mobile Filter Button */}
+                    <button
+                      onClick={() => setIsMobileFiltersOpen(true)}
+                      className="lg:hidden flex items-center gap-2 px-3 py-2 bg-secondary-100 text-secondary-700 rounded-md hover:bg-secondary-200 transition-colors duration-150"
+                    >
+                      <Icon name="Filter" size={16} />
+                      <span className="text-sm font-medium">Filters</span>
+                    </button>
+
+                    {/* Results Count */}
+                    <div className="text-sm text-text-secondary">
+                      <span className="font-medium text-text-primary">{filteredAndSortedArticles.length}</span> articles found
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {/* Sort Dropdown */}
+                    <select
+                      value={`${sortBy}-${sortOrder}`}
+                      onChange={(e) => {
+                        const [field, order] = e.target.value.split('-');
+                        setSortBy(field);
+                        setSortOrder(order);
+                      }}
+                      className="px-3 py-2 border border-border rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      <option value="date-desc">Newest First</option>
+                      <option value="date-asc">Oldest First</option>
+                      <option value="title-asc">Title A-Z</option>
+                      <option value="title-desc">Title Z-A</option>
+                      <option value="author-asc">Author A-Z</option>
+                      <option value="views-desc">Most Views</option>
+                    </select>
+
+                    {/* View Toggle */}
+                    <div className="flex items-center bg-secondary-100 rounded-md p-1">
+                      <button
+                        onClick={() => setViewMode('card')}
+                        className={`p-2 rounded transition-colors duration-150 ${
+                          viewMode === 'card' ?'bg-surface text-primary shadow-sm' :'text-secondary-600 hover:text-text-primary'
+                        }`}
+                      >
+                        <Icon name="Grid3X3" size={16} />
+                      </button>
+                      <button
+                        onClick={() => setViewMode('table')}
+                        className={`p-2 rounded transition-colors duration-150 ${
+                          viewMode === 'table' ?'bg-surface text-primary shadow-sm' :'text-secondary-600 hover:text-text-primary'
+                        }`}
+                      >
+                        <Icon name="List" size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bulk Actions Toolbar */}
+              {selectedArticles.length > 0 && (
+                <BulkActionsToolbar
+                  selectedCount={selectedArticles.length}
+                  onBulkAction={handleBulkAction}
+                  isLoading={isLoading}
+                />
+              )}
+
+              {/* Articles Display */}
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="flex items-center gap-3 text-text-secondary">
+                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading articles...</span>
+                  </div>
+                </div>
+              ) : filteredAndSortedArticles.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Icon name="FileText" size={32} className="text-secondary-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-text-primary mb-2">No articles found</h3>
+                  <p className="text-text-secondary">Try adjusting your filters or search terms</p>
+                </div>
+              ) : viewMode === 'card' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {filteredAndSortedArticles.map((article) => (
+                    <ArticleCard
+                      key={article.id}
+                      article={article}
+                      isSelected={selectedArticles.includes(article.id)}
+                      onSelect={handleSelectArticle}
+                      onAction={handleArticleAction}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <ArticleTable
+                  articles={filteredAndSortedArticles}
+                  selectedArticles={selectedArticles}
+                  onSelectArticle={handleSelectArticle}
+                  onSelectAll={handleSelectAll}
+                  onAction={handleArticleAction}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={(field) => {
+                    if (sortBy === field) {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy(field);
+                      setSortOrder('asc');
+                    }
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Filter Overlay */}
+      {isMobileFiltersOpen && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            onClick={() => setIsMobileFiltersOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 w-80 bg-surface z-50 lg:hidden overflow-y-auto">
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-text-primary">Filters</h2>
+                <button
+                  onClick={() => setIsMobileFiltersOpen(false)}
+                  className="p-2 hover:bg-secondary-100 rounded-md transition-colors duration-150"
+                >
+                  <Icon name="X" size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="p-4">
+              <FilterSidebar
+                filters={filters}
+                setFilters={setFilters}
+                availableAuthors={availableAuthors}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                onClose={() => setIsMobileFiltersOpen(false)}
+              />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default ArticlesManagement;
