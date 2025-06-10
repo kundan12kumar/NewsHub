@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "components/ui/Header";
 import Icon from "components/AppIcon";
@@ -14,70 +14,109 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedDateRange, setSelectedDateRange] = useState("7days");
   const [selectedContentType, setSelectedContentType] = useState("all");
-  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+
+  // Helper function to validate and sanitize image URLs
+  const sanitizeImageUrl = (url) => {
+    if (!url || typeof url !== 'string') {
+      return null;
+    }
+    
+    // Remove common problematic patterns
+    const cleanUrl = url.trim();
+    
+    // Check if it's a valid HTTP/HTTPS URL
+    try {
+      const urlObj = new URL(cleanUrl);
+      if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+        return null;
+      }
+      
+      // Check for common image extensions
+      const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+      const hasValidExtension = validExtensions.some(ext => 
+        cleanUrl.toLowerCase().includes(ext)
+      );
+      
+      // If it's from a known image service or has valid extension, allow it
+      const knownImageServices = ['unsplash.com', 'pexels.com', 'pixabay.com', 'placeholder.com', 'placehold.co'];
+      const isFromKnownService = knownImageServices.some(service => 
+        cleanUrl.includes(service)
+      );
+      
+      if (hasValidExtension || isFromKnownService || cleanUrl.includes('image')) {
+        return cleanUrl;
+      }
+      
+      return null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Generate a reliable placeholder URL
+  const generatePlaceholderUrl = (width = 400, height = 250, text = 'No Image') => {
+    return `data:image/svg+xml;base64,${btoa(`
+      <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="${width}" height="${height}" fill="#F3F4F6"/>
+        <rect x="${width/2 - 40}" y="${height/2 - 40}" width="80" height="80" stroke="#9CA3AF" stroke-width="2" fill="none" rx="4"/>
+        <circle cx="${width/2 - 15}" cy="${height/2 - 15}" r="8" fill="#9CA3AF"/>
+        <path d="M${width/2 + 20} ${height/2 + 20} L${width/2 - 20} ${height/2 - 10} L${width/2 - 35} ${height/2 + 20} Z" fill="#9CA3AF"/>
+        <text x="${width/2}" y="${height/2 + 50}" font-family="Arial" font-size="14" fill="#9CA3AF" text-anchor="middle">${text}</text>
+      </svg>
+    `)}`;
+  };
 
   // Mock data for dashboard metrics as fallback
-  const mockDashboardMetrics = {
+  const mockDashboardMetrics = useMemo(() => ({
     totalArticles: 1247,
     recentAdditions: 23,
     topAuthors: 8,
     pendingReviews: 5,
-  };
+  }), []);
 
-  // Mock data for recent articles as fallback
-  const mockRecentArticles = [
+  // Mock data for recent articles with safe image URLs
+  const mockRecentArticles = useMemo(() => [
     {
       id: 1,
-      title:
-        "Breaking: Major Tech Conference Announces Revolutionary AI Breakthrough",
+      title: "Breaking: Major Tech Conference Announces Revolutionary AI Breakthrough",
       author: "Sarah Johnson",
       publishedDate: "2024-01-15",
       type: "news",
-      thumbnail:
-        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=250&fit=crop",
-      excerpt:
-        "Industry leaders gather to discuss the latest developments in artificial intelligence technology that could reshape the future of computing.",
+      thumbnail: generatePlaceholderUrl(400, 250, 'Tech News'),
+      excerpt: "Industry leaders gather to discuss the latest developments in artificial intelligence technology that could reshape the future of computing.",
     },
     {
       id: 2,
-      title:
-        "Climate Change Impact: New Research Reveals Alarming Ocean Temperature Rise",
+      title: "Climate Change Impact: New Research Reveals Alarming Ocean Temperature Rise",
       author: "Dr. Michael Chen",
       publishedDate: "2024-01-14",
       type: "news",
-      thumbnail:
-        "https://images.pexels.com/photos/1001682/pexels-photo-1001682.jpeg?w=400&h=250&fit=crop",
-      excerpt:
-        "Scientists from leading universities present compelling evidence of accelerated ocean warming patterns affecting marine ecosystems worldwide.",
+      thumbnail: generatePlaceholderUrl(400, 250, 'Climate News'),
+      excerpt: "Scientists from leading universities present compelling evidence of accelerated ocean warming patterns affecting marine ecosystems worldwide.",
     },
     {
       id: 3,
-      title:
-        "The Future of Remote Work: How Companies Are Adapting to Hybrid Models",
+      title: "The Future of Remote Work: How Companies Are Adapting to Hybrid Models",
       author: "Emily Rodriguez",
       publishedDate: "2024-01-13",
       type: "blog",
-      thumbnail:
-        "https://images.pixabay.com/photo/2020/07/08/04/12/work-5382501_1280.jpg?w=400&h=250&fit=crop",
-      excerpt:
-        "An in-depth analysis of how organizations worldwide are implementing flexible work arrangements and the long-term implications for productivity.",
+      thumbnail: generatePlaceholderUrl(400, 250, 'Work Trends'),
+      excerpt: "An in-depth analysis of how organizations worldwide are implementing flexible work arrangements and the long-term implications for productivity.",
     },
     {
       id: 4,
-      title:
-        "Sustainable Energy Solutions: Solar Power Efficiency Reaches New Heights",
+      title: "Sustainable Energy Solutions: Solar Power Efficiency Reaches New Heights",
       author: "James Wilson",
       publishedDate: "2024-01-12",
       type: "news",
-      thumbnail:
-        "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&h=250&fit=crop",
-      excerpt:
-        "Latest innovations in photovoltaic technology promise to make solar energy more accessible and cost-effective for residential consumers.",
+      thumbnail: generatePlaceholderUrl(400, 250, 'Energy News'),
+      excerpt: "Latest innovations in photovoltaic technology promise to make solar energy more accessible and cost-effective for residential consumers.",
     },
-  ];
+  ], []);
 
   // Mock data for article trends (last 7 days)
-  const articleTrends = [
+  const articleTrends = useMemo(() => [
     { date: "2024-01-09", articles: 12 },
     { date: "2024-01-10", articles: 15 },
     { date: "2024-01-11", articles: 8 },
@@ -85,50 +124,58 @@ const Dashboard = () => {
     { date: "2024-01-13", articles: 22 },
     { date: "2024-01-14", articles: 16 },
     { date: "2024-01-15", articles: 25 },
-  ];
+  ], []);
 
   // Mock data for author performance
-  const authorPerformance = [
+  const authorPerformance = useMemo(() => [
     { name: "Sarah Johnson", articles: 45 },
     { name: "Dr. Michael Chen", articles: 38 },
     { name: "Emily Rodriguez", articles: 32 },
     { name: "James Wilson", articles: 28 },
     { name: "Lisa Thompson", articles: 24 },
-  ];
+  ], []);
+
+  // Memoize API parameters to prevent unnecessary re-renders
+  const apiParams = useMemo(() => ({ 
+    country: "us", 
+    pageSize: 4 
+  }), []);
 
   const {
     data: recentArticles,
+    isLoading: articlesLoading,
     error,
     usingMockData,
-  } = useNewsData(
-    "top-headlines",
-    { country: "us", pageSize: 4 },
-    mockRecentArticles
-  );
+  } = useNewsData("top-headlines", apiParams, mockRecentArticles);
 
-  // FIX 1: Use the correct dashboardMetrics variable instead of undefined one
-  const dashboardMetrics = mockDashboardMetrics;
-
-  // Transform NewsAPI data to match our format
-  const formattedArticles = usingMockData
-    ? recentArticles
-    : recentArticles?.map((article) => ({
-        id: article.url,
-        title: article.title,
+  // Transform NewsAPI data to match our format with safe image handling
+  const formattedArticles = useMemo(() => {
+    if (usingMockData) {
+      return recentArticles || [];
+    }
+    
+    return recentArticles?.map((article, index) => {
+      const sanitizedImageUrl = sanitizeImageUrl(article.urlToImage);
+      
+      return {
+        id: article.url || `article-${index}`,
+        title: article.title || "Untitled Article",
         author: article.author || "Unknown Author",
         publishedDate: article.publishedAt
           ? article.publishedAt.split("T")[0]
-          : "Unknown date",
+          : new Date().toISOString().split("T")[0],
         type: "news",
-        thumbnail: article.urlToImage || "https://via.placeholder.com/400x250",
+        thumbnail: sanitizedImageUrl || generatePlaceholderUrl(400, 250, 'News'),
         excerpt: article.description || "No description available",
-      })) || []; // FIX 2: Add fallback empty array to prevent undefined errors
+      };
+    }) || [];
+  }, [recentArticles, usingMockData]);
 
+  // Simulate dashboard loading (separate from API loading)
   useEffect(() => {
-    // Simulate loading time
     const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+      setDashboardLoading(false);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, []);
@@ -145,29 +192,12 @@ const Dashboard = () => {
     navigate(`/articles-management?article=${articleId}`);
   };
 
-  // FIX 3: Add error handling for when the hook returns an error
-  if (error && !usingMockData) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="pt-16 flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Icon name="AlertTriangle" size={48} className="mx-auto mb-4 text-red-500" />
-            <h2 className="text-xl font-semibold text-text-primary mb-2">Error Loading Data</h2>
-            <p className="text-text-secondary">{error.message || "Something went wrong"}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="mt-4 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-700"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleRetry = () => {
+    window.location.reload();
+  };
 
-  if (isLoading) {
+  // Show loading state only for dashboard initialization
+  if (dashboardLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -199,7 +229,13 @@ const Dashboard = () => {
               {usingMockData && (
                 <div className="mt-2 text-sm text-warning-600 bg-warning-50 px-3 py-1 rounded inline-flex items-center">
                   <Icon name="AlertTriangle" size={14} className="mr-1" />
-                  Showing mock data due to API limitations
+                  {articlesLoading ? 'Loading live data...' : 'Showing sample data - API unavailable'}
+                </div>
+              )}
+              {error && !usingMockData && (
+                <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-1 rounded inline-flex items-center">
+                  <Icon name="AlertTriangle" size={14} className="mr-1" />
+                  API Error: {error}
                 </div>
               )}
             </div>
@@ -219,14 +255,14 @@ const Dashboard = () => {
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <MetricCard
                   title="Total Articles"
-                  value={dashboardMetrics.totalArticles.toLocaleString()}
+                  value={mockDashboardMetrics.totalArticles.toLocaleString()}
                   icon="FileText"
                   trend="+12%"
                   trendDirection="up"
                 />
                 <MetricCard
                   title="Recent Additions"
-                  value={dashboardMetrics.recentAdditions}
+                  value={mockDashboardMetrics.recentAdditions}
                   icon="Plus"
                   trend="+5"
                   trendDirection="up"
@@ -234,14 +270,14 @@ const Dashboard = () => {
                 />
                 <MetricCard
                   title="Top Authors"
-                  value={dashboardMetrics.topAuthors}
+                  value={mockDashboardMetrics.topAuthors}
                   icon="Users"
                   trend="Active"
                   trendDirection="neutral"
                 />
                 <MetricCard
                   title="Pending Reviews"
-                  value={dashboardMetrics.pendingReviews}
+                  value={mockDashboardMetrics.pendingReviews}
                   icon="Clock"
                   trend="-2"
                   trendDirection="down"
@@ -265,12 +301,14 @@ const Dashboard = () => {
                 />
               </div>
 
-              {/* Recent Articles Preview - Now using real data when available */}
+              {/* Recent Articles Preview */}
               <div className="bg-surface rounded-lg shadow-sm border border-border p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-xl font-semibold text-text-primary">Recent Articles</h2>
-                    <p className="text-text-secondary">Latest published content</p>
+                    <p className="text-text-secondary">
+                      {articlesLoading ? 'Loading latest content...' : 'Latest published content'}
+                    </p>
                   </div>
                   <button
                     onClick={handleViewAllArticles}
@@ -281,8 +319,13 @@ const Dashboard = () => {
                   </button>
                 </div>
 
-                {/* FIX 4: Add check for empty articles array */}
-                {formattedArticles.length > 0 ? (
+                {/* Articles Loading State */}
+                {articlesLoading ? (
+                  <div className="text-center py-8">
+                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-text-secondary">Loading articles...</p>
+                  </div>
+                ) : formattedArticles.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {formattedArticles.map((article) => (
                       <ArticlePreviewCard
@@ -295,7 +338,15 @@ const Dashboard = () => {
                 ) : (
                   <div className="text-center py-8">
                     <Icon name="FileText" size={48} className="mx-auto mb-4 text-gray-400" />
-                    <p className="text-text-secondary">No articles available at the moment.</p>
+                    <p className="text-text-secondary mb-4">No articles available at the moment.</p>
+                    {error && (
+                      <button 
+                        onClick={handleRetry} 
+                        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
+                      >
+                        Try Again
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

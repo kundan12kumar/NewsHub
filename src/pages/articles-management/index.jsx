@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from 'components/ui/Header';
 import Icon from 'components/AppIcon';
@@ -8,6 +8,114 @@ import ArticleCard from './components/ArticleCard';
 import ArticleTable from './components/ArticleTable';
 import FilterSidebar from './components/FilterSidebar';
 import BulkActionsToolbar from './components/BulkActionsToolbar';
+
+// FIX 1: Move mockArticles OUTSIDE component to prevent recreation on every render
+const MOCK_ARTICLES = [
+  {
+    id: 1,
+    title: "Breaking: Major Tech Company Announces Revolutionary AI Breakthrough",
+    author: "Sarah Johnson",
+    date: "2024-01-15",
+    type: "news",
+    status: "published",
+    thumbnail: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop",
+    excerpt: "A groundbreaking development in artificial intelligence promises to transform how we interact with technology in our daily lives.",
+    readTime: "5 min read",
+    views: 12500,
+    category: "Technology"
+  },
+  {
+    id: 2,
+    title: "The Future of Remote Work: Trends and Predictions for 2024",
+    author: "Michael Chen",
+    date: "2024-01-14",
+    type: "blog",
+    status: "published",
+    thumbnail: "https://images.pexels.com/photos/4226140/pexels-photo-4226140.jpeg?w=400&h=250&fit=crop",
+    excerpt: "Exploring the evolving landscape of remote work and what organizations need to know to stay competitive.",
+    readTime: "8 min read",
+    views: 8750,
+    category: "Business"
+  },
+  {
+    id: 3,
+    title: "Climate Change Summit Reaches Historic Agreement",
+    author: "Emma Rodriguez",
+    date: "2024-01-13",
+    type: "news",
+    status: "published",
+    thumbnail: "https://images.pixabay.com/photo/2013/07/18/20/26/sea-164989_1280.jpg?w=400&h=250&fit=crop",
+    excerpt: "World leaders unite on ambitious climate targets in what experts call the most significant environmental agreement in decades.",
+    readTime: "6 min read",
+    views: 15200,
+    category: "Environment"
+  },
+  {
+    id: 4,
+    title: "Cryptocurrency Market Analysis: What Investors Need to Know",
+    author: "David Park",
+    date: "2024-01-12",
+    type: "blog",
+    status: "draft",
+    thumbnail: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&h=250&fit=crop",
+    excerpt: "A comprehensive analysis of current cryptocurrency trends and investment strategies for the modern portfolio.",
+    readTime: "12 min read",
+    views: 0,
+    category: "Finance"
+  },
+  {
+    id: 5,
+    title: "Healthcare Innovation: New Treatment Shows Promise",
+    author: "Dr. Lisa Thompson",
+    date: "2024-01-11",
+    type: "news",
+    status: "published",
+    thumbnail: "https://images.pexels.com/photos/3938023/pexels-photo-3938023.jpeg?w=400&h=250&fit=crop",
+    excerpt: "Medical researchers announce breakthrough treatment that could revolutionize patient care for chronic conditions.",
+    readTime: "7 min read",
+    views: 9800,
+    category: "Health"
+  },
+  {
+    id: 6,
+    title: "The Art of Digital Storytelling in Modern Marketing",
+    author: "Jennifer Walsh",
+    date: "2024-01-10",
+    type: "blog",
+    status: "published",
+    thumbnail: "https://images.pixabay.com/photo/2017/01/29/21/16/nurse-2017825_1280.jpg?w=400&h=250&fit=crop",
+    excerpt: "How brands are leveraging narrative techniques to create compelling digital experiences that resonate with audiences.",
+    readTime: "10 min read",
+    views: 6400,
+    category: "Marketing"
+  },
+  {
+    id: 7,
+    title: "Space Exploration Milestone: Mars Mission Update",
+    author: "Robert Kim",
+    date: "2024-01-09",
+    type: "news",
+    status: "published",
+    thumbnail: "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=400&h=250&fit=crop",
+    excerpt: "Latest developments from the Mars exploration mission reveal fascinating discoveries about the Red Planet's geology.",
+    readTime: "9 min read",
+    views: 18700,
+    category: "Science"
+  },
+  {
+    id: 8,
+    title: "Sustainable Fashion: The Rise of Eco-Conscious Brands",
+    author: "Maria Santos",
+    date: "2024-01-08",
+    type: "blog",
+    status: "review",
+    thumbnail: "https://images.pexels.com/photos/996329/pexels-photo-996329.jpeg?w=400&h=250&fit=crop",
+    excerpt: "Examining how fashion brands are embracing sustainability and what consumers can do to support ethical fashion choices.",
+    readTime: "11 min read",
+    views: 0,
+    category: "Lifestyle"
+  }
+];
 
 const ArticlesManagement = () => {
   const location = useLocation();
@@ -33,130 +141,24 @@ const ArticlesManagement = () => {
     status: 'all'
   });
 
-  // FIX 1: Move mockArticles definition BEFORE useNewsData hook
-  const mockArticles = [
-    {
-      id: 1,
-      title: "Breaking: Major Tech Company Announces Revolutionary AI Breakthrough",
-      author: "Sarah Johnson",
-      date: "2024-01-15",
-      type: "news",
-      status: "published",
-      thumbnail: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop",
-      excerpt: "A groundbreaking development in artificial intelligence promises to transform how we interact with technology in our daily lives.",
-      readTime: "5 min read",
-      views: 12500,
-      category: "Technology"
-    },
-    {
-      id: 2,
-      title: "The Future of Remote Work: Trends and Predictions for 2024",
-      author: "Michael Chen",
-      date: "2024-01-14",
-      type: "blog",
-      status: "published",
-      thumbnail: "https://images.pexels.com/photos/4226140/pexels-photo-4226140.jpeg?w=400&h=250&fit=crop",
-      excerpt: "Exploring the evolving landscape of remote work and what organizations need to know to stay competitive.",
-      readTime: "8 min read",
-      views: 8750,
-      category: "Business"
-    },
-    {
-      id: 3,
-      title: "Climate Change Summit Reaches Historic Agreement",
-      author: "Emma Rodriguez",
-      date: "2024-01-13",
-      type: "news",
-      status: "published",
-      thumbnail: "https://images.pixabay.com/photo/2013/07/18/20/26/sea-164989_1280.jpg?w=400&h=250&fit=crop",
-      excerpt: "World leaders unite on ambitious climate targets in what experts call the most significant environmental agreement in decades.",
-      readTime: "6 min read",
-      views: 15200,
-      category: "Environment"
-    },
-    {
-      id: 4,
-      title: "Cryptocurrency Market Analysis: What Investors Need to Know",
-      author: "David Park",
-      date: "2024-01-12",
-      type: "blog",
-      status: "draft",
-      thumbnail: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&h=250&fit=crop",
-      excerpt: "A comprehensive analysis of current cryptocurrency trends and investment strategies for the modern portfolio.",
-      readTime: "12 min read",
-      views: 0,
-      category: "Finance"
-    },
-    {
-      id: 5,
-      title: "Healthcare Innovation: New Treatment Shows Promise",
-      author: "Dr. Lisa Thompson",
-      date: "2024-01-11",
-      type: "news",
-      status: "published",
-      thumbnail: "https://images.pexels.com/photos/3938023/pexels-photo-3938023.jpeg?w=400&h=250&fit=crop",
-      excerpt: "Medical researchers announce breakthrough treatment that could revolutionize patient care for chronic conditions.",
-      readTime: "7 min read",
-      views: 9800,
-      category: "Health"
-    },
-    {
-      id: 6,
-      title: "The Art of Digital Storytelling in Modern Marketing",
-      author: "Jennifer Walsh",
-      date: "2024-01-10",
-      type: "blog",
-      status: "published",
-      thumbnail: "https://images.pixabay.com/photo/2017/01/29/21/16/nurse-2017825_1280.jpg?w=400&h=250&fit=crop",
-      excerpt: "How brands are leveraging narrative techniques to create compelling digital experiences that resonate with audiences.",
-      readTime: "10 min read",
-      views: 6400,
-      category: "Marketing"
-    },
-    {
-      id: 7,
-      title: "Space Exploration Milestone: Mars Mission Update",
-      author: "Robert Kim",
-      date: "2024-01-09",
-      type: "news",
-      status: "published",
-      thumbnail: "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=400&h=250&fit=crop",
-      excerpt: "Latest developments from the Mars exploration mission reveal fascinating discoveries about the Red Planet's geology.",
-      readTime: "9 min read",
-      views: 18700,
-      category: "Science"
-    },
-    {
-      id: 8,
-      title: "Sustainable Fashion: The Rise of Eco-Conscious Brands",
-      author: "Maria Santos",
-      date: "2024-01-08",
-      type: "blog",
-      status: "review",
-      thumbnail: "https://images.pexels.com/photos/996329/pexels-photo-996329.jpeg?w=400&h=250&fit=crop",
-      excerpt: "Examining how fashion brands are embracing sustainability and what consumers can do to support ethical fashion choices.",
-      readTime: "11 min read",
-      views: 0,
-      category: "Lifestyle"
-    }
-  ];
+  // FIX 2: Memoize news hook parameters to prevent unnecessary calls
+  const newsParams = useMemo(() => ({
+    q: 'technology',
+    pageSize: 20
+  }), []);
 
-  // FIX 2: Add error handling and proper data structure
+  // Use news data hook with stable parameters
   const { 
     data: newsData, 
     isLoading: isNewsLoading, 
     usingMockData, 
     error 
-  } = useNewsData(
-    'everything',
-    { q: 'technology', pageSize: 20 },
-    mockArticles
-  );
+  } = useNewsData('everything', newsParams, MOCK_ARTICLES);
 
-  // FIX 3: Add null safety and better data transformation
+  // FIX 3: Optimize article transformation with proper dependencies
   const transformedArticles = useMemo(() => {
     if (!newsData || newsData.length === 0) {
-      return mockArticles;
+      return MOCK_ARTICLES;
     }
 
     if (usingMockData) {
@@ -168,17 +170,17 @@ const ArticlesManagement = () => {
       title: article.title || 'Untitled Article',
       author: article.author || 'Unknown Author',
       date: article.publishedAt ? article.publishedAt.split('T')[0] : new Date().toISOString().split('T')[0],
-      type: 'news', // NewsAPI doesn't have types, default to news
+      type: 'news',
       status: 'published',
       thumbnail: article.urlToImage || 'https://via.placeholder.com/400x250',
       excerpt: article.description || 'No description available',
       readTime: `${Math.max(1, Math.floor((article.content?.length || 500) / 500))} min read`,
       views: Math.floor(Math.random() * 20000),
-      category: 'Technology' // Default category
+      category: 'Technology'
     }));
-  }, [newsData, usingMockData, mockArticles]);
+  }, [newsData, usingMockData]); // Removed MOCK_ARTICLES from dependencies since it's constant
 
-  // Get unique authors for filter
+  // FIX 4: Optimize available authors calculation
   const availableAuthors = useMemo(() => {
     if (!transformedArticles || transformedArticles.length === 0) {
       return [];
@@ -186,7 +188,7 @@ const ArticlesManagement = () => {
     return [...new Set(transformedArticles.map(article => article.author))];
   }, [transformedArticles]);
 
-  // Filter and sort articles
+  // FIX 5: Optimize filtering and sorting with better dependencies
   const filteredAndSortedArticles = useMemo(() => {
     if (!transformedArticles || transformedArticles.length === 0) {
       return [];
@@ -194,11 +196,13 @@ const ArticlesManagement = () => {
 
     let filtered = transformedArticles.filter(article => {
       // Search filter
-      if (searchQuery && 
-          !article.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          !article.author.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          !article.excerpt.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
+      if (searchQuery) {
+        const searchLower = searchQuery.toLowerCase();
+        const matchesSearch = 
+          article.title.toLowerCase().includes(searchLower) ||
+          article.author.toLowerCase().includes(searchLower) ||
+          article.excerpt.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
       }
 
       // Author filter
@@ -263,48 +267,67 @@ const ArticlesManagement = () => {
     return filtered;
   }, [transformedArticles, searchQuery, filters, sortBy, sortOrder]);
 
-  // Handle URL search params
+  // FIX 6: Handle URL search params only once on mount and location change
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const searchParam = urlParams.get('search');
-    if (searchParam) {
+    if (searchParam && searchParam !== searchQuery) {
       setSearchQuery(searchParam);
     }
-  }, [location.search]);
+  }, [location.search]); // Removed searchQuery from dependencies to prevent loop
 
-  // Handle article selection
-  const handleSelectArticle = (articleId) => {
+  // FIX 7: Use useCallback for event handlers to prevent child re-renders
+  const handleSelectArticle = useCallback((articleId) => {
     setSelectedArticles(prev => 
       prev.includes(articleId) 
         ? prev.filter(id => id !== articleId)
         : [...prev, articleId]
     );
-  };
+  }, []);
 
-  const handleSelectAll = () => {
-    if (selectedArticles.length === filteredAndSortedArticles.length) {
-      setSelectedArticles([]);
-    } else {
-      setSelectedArticles(filteredAndSortedArticles.map(article => article.id));
-    }
-  };
+  const handleSelectAll = useCallback(() => {
+    setSelectedArticles(prev => {
+      if (prev.length === filteredAndSortedArticles.length) {
+        return [];
+      } else {
+        return filteredAndSortedArticles.map(article => article.id);
+      }
+    });
+  }, [filteredAndSortedArticles]);
 
-  // Handle bulk actions
-  const handleBulkAction = (action) => {
+  const handleBulkAction = useCallback((action) => {
     setIsLoading(true);
     setTimeout(() => {
       console.log(`Performing ${action} on articles:`, selectedArticles);
       setSelectedArticles([]);
       setIsLoading(false);
     }, 1000);
-  };
+  }, [selectedArticles]);
 
-  // Handle individual article actions
-  const handleArticleAction = (action, articleId) => {
+  const handleArticleAction = useCallback((action, articleId) => {
     console.log(`Performing ${action} on article:`, articleId);
-  };
+  }, []);
 
-  // FIX 4: Add error state handling
+  // FIX 8: Memoize sort handler
+  const handleSort = useCallback((field) => {
+    if (sortBy === field) {
+      setSortOrder(current => current === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  }, [sortBy]);
+
+  // FIX 9: Memoize sort value for select
+  const sortValue = useMemo(() => `${sortBy}-${sortOrder}`, [sortBy, sortOrder]);
+
+  const handleSortChange = useCallback((e) => {
+    const [field, order] = e.target.value.split('-');
+    setSortBy(field);
+    setSortOrder(order);
+  }, []);
+
+  // Error state handling
   if (error && !usingMockData) {
     return (
       <div className="min-h-screen bg-background">
@@ -336,7 +359,6 @@ const ArticlesManagement = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-text-primary mb-2">Articles Management</h1>
             <p className="text-text-secondary">Manage and organize your news articles and blog posts</p>
-            {/* FIX 5: Add mock data indicator */}
             {usingMockData && (
               <div className="mt-2 text-sm text-warning-600 bg-warning-50 px-3 py-1 rounded inline-flex items-center">
                 <Icon name="AlertTriangle" size={14} className="mr-1" />
@@ -381,12 +403,8 @@ const ArticlesManagement = () => {
                   <div className="flex items-center gap-3">
                     {/* Sort Dropdown */}
                     <select
-                      value={`${sortBy}-${sortOrder}`}
-                      onChange={(e) => {
-                        const [field, order] = e.target.value.split('-');
-                        setSortBy(field);
-                        setSortOrder(order);
-                      }}
+                      value={sortValue}
+                      onChange={handleSortChange}
                       className="px-3 py-2 border border-border rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     >
                       <option value="date-desc">Newest First</option>
@@ -466,14 +484,7 @@ const ArticlesManagement = () => {
                   onAction={handleArticleAction}
                   sortBy={sortBy}
                   sortOrder={sortOrder}
-                  onSort={(field) => {
-                    if (sortBy === field) {
-                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                    } else {
-                      setSortBy(field);
-                      setSortOrder('asc');
-                    }
-                  }}
+                  onSort={handleSort}
                 />
               )}
             </div>
