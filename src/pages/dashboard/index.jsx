@@ -239,13 +239,6 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-            <button
-              onClick={handleAddArticle}
-              className="mt-4 sm:mt-0 bg-primary text-white px-6 py-3 rounded-md hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center space-x-2"
-            >
-              <Icon name="Plus" size={20} />
-              <span>Add Article</span>
-            </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -350,17 +343,6 @@ const Dashboard = () => {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Sidebar */}
-            <div className="lg:col-span-1 space-y-6">
-              <QuickFilters
-                selectedDateRange={selectedDateRange}
-                selectedContentType={selectedContentType}
-                onDateRangeChange={setSelectedDateRange}
-                onContentTypeChange={setSelectedContentType}
-              />
-              <RecentActivity />
             </div>
           </div>
         </div>
