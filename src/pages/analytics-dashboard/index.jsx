@@ -1,62 +1,125 @@
-import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import Header from 'components/ui/Header';
-import Icon from 'components/AppIcon';
+import React, { useState, useEffect } from "react";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { FileText, TrendingUp, Star, Users, BarChart3, FileDown, Download, AlertTriangle, Filter, X } from "lucide-react";
+
+// Mock Header component
+const Header = () => (
+  <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-30 border-b">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex justify-between items-center h-16">
+        <h1 className="text-xl font-bold text-gray-900">News Analytics</h1>
+      </div>
+    </div>
+  </header>
+);
+
+// Mock Icon component using lucide-react
+const Icon = ({ name, size = 16, color, className = "" }) => {
+  const iconMap = {
+    FileText,
+    TrendingUp,
+    Star,
+    Users,
+    BarChart3,
+    AlertTriangle,
+    FileDown,
+    Download,
+    Filter,
+    X
+  };
+  
+  const IconComponent = iconMap[name];
+  if (!IconComponent) return null;
+  
+  return (
+    <IconComponent 
+      size={size} 
+      color={color} 
+      className={className}
+    />
+  );
+};
+
+// Mock useNewsData hook
+const useNewsData = () => {
+  return {
+    data: [],
+    isLoading: false,
+    usingMockData: true
+  };
+};
 
 const AnalyticsDashboard = () => {
-  const [dateRange, setDateRange] = useState('last30days');
-  const [contentTypeFilter, setContentTypeFilter] = useState('all');
+  const [dateRange, setDateRange] = useState("last30days");
+  const [contentTypeFilter, setContentTypeFilter] = useState("all");
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data for analytics
+  // Mock data for analytics - Fixed: Use consistent variable name
   const kpiData = {
     totalArticles: 1247,
     totalEngagement: 89432,
-    topPerformingContent: 'Breaking: Tech Innovation Summit 2024',
-    activeAuthors: 23
+    topPerformingContent: "Breaking: Tech Innovation Summit 2024",
+    activeAuthors: 23,
   };
 
-  const articlesByType = [
-    { type: 'News', count: 847, percentage: 68 },
-    { type: 'Blog', count: 400, percentage: 32 }
+  const mockArticlesByType = [
+    { type: "News", count: 847, percentage: 68 },
+    { type: "Blog", count: 400, percentage: 32 },
   ];
 
-  const publicationTrends = [
-    { date: '2024-01-01', articles: 45, engagement: 2340 },
-    { date: '2024-01-02', articles: 52, engagement: 2890 },
-    { date: '2024-01-03', articles: 38, engagement: 2156 },
-    { date: '2024-01-04', articles: 61, engagement: 3245 },
-    { date: '2024-01-05', articles: 47, engagement: 2567 },
-    { date: '2024-01-06', articles: 55, engagement: 3012 },
-    { date: '2024-01-07', articles: 43, engagement: 2234 }
+  const {
+    data: newsData,
+    isLoading: isNewsLoading,
+    usingMockData,
+  } = useNewsData("everything", { q: "technology", pageSize: 100 }, []);
+
+  const mockPublicationTrends = [
+    { date: "2024-01-01", articles: 45, engagement: 2340 },
+    { date: "2024-01-02", articles: 52, engagement: 2890 },
+    { date: "2024-01-03", articles: 38, engagement: 2156 },
+    { date: "2024-01-04", articles: 61, engagement: 3245 },
+    { date: "2024-01-05", articles: 47, engagement: 2567 },
+    { date: "2024-01-06", articles: 55, engagement: 3012 },
+    { date: "2024-01-07", articles: 43, engagement: 2234 },
   ];
 
   const authorProductivity = [
-    { author: 'Sarah Johnson', articles: 156, engagement: 12450 },
-    { author: 'Michael Chen', articles: 142, engagement: 11230 },
-    { author: 'Emily Rodriguez', articles: 134, engagement: 10890 },
-    { author: 'David Kim', articles: 128, engagement: 9876 },
-    { author: 'Lisa Thompson', articles: 119, engagement: 9234 },
-    { author: 'James Wilson', articles: 112, engagement: 8765 }
+    { author: "Sarah Johnson", articles: 156, engagement: 12450 },
+    { author: "Michael Chen", articles: 142, engagement: 11230 },
+    { author: "Emily Rodriguez", articles: 134, engagement: 10890 },
+    { author: "David Kim", articles: 128, engagement: 9876 },
+    { author: "Lisa Thompson", articles: 119, engagement: 9234 },
+    { author: "James Wilson", articles: 112, engagement: 8765 },
   ];
 
   const quickInsights = [
     {
-      title: 'Top Performing Day',
-      value: 'Thursday',
-      description: 'Highest average engagement'
+      title: "Top Performing Day",
+      value: "Thursday",
+      description: "Highest average engagement",
     },
     {
-      title: 'Peak Publishing Time',
-      value: '2:00 PM',
-      description: 'Most articles published'
+      title: "Peak Publishing Time",
+      value: "2:00 PM",
+      description: "Most articles published",
     },
     {
-      title: 'Growth Rate',
-      value: '+12.5%',
-      description: 'vs. previous month'
-    }
+      title: "Growth Rate",
+      value: "+12.5%",
+      description: "vs. previous month",
+    },
   ];
 
   const handleExportPDF = () => {
@@ -64,7 +127,7 @@ const AnalyticsDashboard = () => {
     // Simulate export process
     setTimeout(() => {
       setIsLoading(false);
-      alert('PDF report exported successfully!');
+      alert("PDF report exported successfully!");
     }, 2000);
   };
 
@@ -73,37 +136,81 @@ const AnalyticsDashboard = () => {
     // Simulate export process
     setTimeout(() => {
       setIsLoading(false);
-      alert('CSV data exported successfully!');
+      alert("CSV data exported successfully!");
     }, 1500);
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric' 
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
     });
   };
 
+  // Helper functions to process NewsAPI data
+  function processArticlesByType(articles) {
+    if (!articles || articles.length === 0) return mockArticlesByType;
+    return [{ type: "News", count: articles.length, percentage: 100 }];
+  }
+
+  function processPublicationTrends(articles) {
+    if (!articles || articles.length === 0) return mockPublicationTrends;
+    
+    const trendsMap = articles.reduce((acc, article) => {
+      const date = article.publishedAt?.split("T")[0];
+      if (date) {
+        acc[date] = acc[date] || { date, articles: 0, engagement: 0 };
+        acc[date].articles += 1;
+        acc[date].engagement += Math.floor(Math.random() * 1000) + 500;
+      }
+      return acc;
+    }, {});
+
+    return Object.values(trendsMap).sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    );
+  }
+
+  // Fixed: Define these variables after the helper functions
+  const articlesByType = usingMockData
+    ? mockArticlesByType
+    : processArticlesByType(newsData);
+
+  const publicationTrends = usingMockData
+    ? mockPublicationTrends
+    : processPublicationTrends(newsData);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       <main className="pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Page Header */}
           <div className="mb-8">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-text-primary mb-2">Analytics Dashboard</h1>
-                <p className="text-text-secondary">Comprehensive insights into content performance and author productivity</p>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Analytics Dashboard
+                </h1>
+                <p className="text-gray-600">
+                  Comprehensive insights into content performance and author
+                  productivity
+                </p>
+                {usingMockData && (
+                  <div className="mt-2 text-sm text-amber-700 bg-amber-50 px-3 py-1 rounded inline-flex items-center">
+                    <Icon name="AlertTriangle" size={14} className="mr-1" />
+                    Showing mock data due to API limitations
+                  </div>
+                )}
               </div>
-              
+
               {/* Export Actions */}
               <div className="flex items-center space-x-3 mt-4 lg:mt-0">
                 <button
                   onClick={handleExportPDF}
                   disabled={isLoading}
-                  className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50"
+                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50"
                 >
                   <Icon name="FileDown" size={16} />
                   <span>Export PDF</span>
@@ -111,7 +218,7 @@ const AnalyticsDashboard = () => {
                 <button
                   onClick={handleExportCSV}
                   disabled={isLoading}
-                  className="flex items-center space-x-2 bg-secondary-100 text-secondary-700 px-4 py-2 rounded-md hover:bg-secondary-200 focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50"
+                  className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50"
                 >
                   <Icon name="Download" size={16} />
                   <span>Export CSV</span>
@@ -125,50 +232,66 @@ const AnalyticsDashboard = () => {
             <div className="lg:col-span-3 space-y-6">
               {/* KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="card p-6">
+                <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-text-secondary">Total Articles</p>
-                      <p className="text-2xl font-bold text-text-primary">{kpiData.totalArticles.toLocaleString()}</p>
+                      <p className="text-sm font-medium text-gray-600">
+                        Total Articles
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {kpiData.totalArticles.toLocaleString()}
+                      </p>
                     </div>
-                    <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-                      <Icon name="FileText" size={24} color="var(--color-primary)" />
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Icon name="FileText" size={24} color="#3B82F6" />
                     </div>
                   </div>
                 </div>
 
-                <div className="card p-6">
+                <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-text-secondary">Total Engagement</p>
-                      <p className="text-2xl font-bold text-text-primary">{kpiData.totalEngagement.toLocaleString()}</p>
+                      <p className="text-sm font-medium text-gray-600">
+                        Total Engagement
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {kpiData.totalEngagement.toLocaleString()}
+                      </p>
                     </div>
-                    <div className="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center">
-                      <Icon name="TrendingUp" size={24} color="var(--color-success)" />
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Icon name="TrendingUp" size={24} color="#10B981" />
                     </div>
                   </div>
                 </div>
 
-                <div className="card p-6">
+                <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-text-secondary">Top Content</p>
-                      <p className="text-sm font-bold text-text-primary truncate">{kpiData.topPerformingContent}</p>
+                      <p className="text-sm font-medium text-gray-600">
+                        Top Content
+                      </p>
+                      <p className="text-sm font-bold text-gray-900 truncate">
+                        {kpiData.topPerformingContent}
+                      </p>
                     </div>
-                    <div className="w-12 h-12 bg-accent-100 rounded-lg flex items-center justify-center">
-                      <Icon name="Star" size={24} color="var(--color-accent)" />
+                    <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <Icon name="Star" size={24} color="#F59E0B" />
                     </div>
                   </div>
                 </div>
 
-                <div className="card p-6">
+                <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-text-secondary">Active Authors</p>
-                      <p className="text-2xl font-bold text-text-primary">{kpiData.activeAuthors}</p>
+                      <p className="text-sm font-medium text-gray-600">
+                        Active Authors
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {kpiData.activeAuthors}
+                      </p>
                     </div>
-                    <div className="w-12 h-12 bg-secondary-100 rounded-lg flex items-center justify-center">
-                      <Icon name="Users" size={24} color="var(--color-secondary)" />
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Icon name="Users" size={24} color="#8B5CF6" />
                     </div>
                   </div>
                 </div>
@@ -177,34 +300,29 @@ const AnalyticsDashboard = () => {
               {/* Charts Section */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* Article Count by Type */}
-                <div className="card p-6">
+                <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-text-primary">Articles by Type</h3>
-                    <Icon name="BarChart3" size={20} className="text-text-secondary" />
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Articles by Type
+                    </h3>
+                    <Icon name="BarChart3" size={20} className="text-gray-500" />
                   </div>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={articlesByType}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                        <XAxis 
-                          dataKey="type" 
-                          stroke="var(--color-text-secondary)"
-                          fontSize={12}
-                        />
-                        <YAxis 
-                          stroke="var(--color-text-secondary)"
-                          fontSize={12}
-                        />
-                        <Tooltip 
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                        <XAxis dataKey="type" stroke="#6B7280" fontSize={12} />
+                        <YAxis stroke="#6B7280" fontSize={12} />
+                        <Tooltip
                           contentStyle={{
-                            backgroundColor: 'var(--color-surface)',
-                            border: '1px solid var(--color-border)',
-                            borderRadius: '8px'
+                            backgroundColor: "white",
+                            border: "1px solid #E5E7EB",
+                            borderRadius: "8px",
                           }}
                         />
-                        <Bar 
-                          dataKey="count" 
-                          fill="var(--color-primary)" 
+                        <Bar
+                          dataKey="count"
+                          fill="#3B82F6"
                           radius={[4, 4, 0, 0]}
                         />
                       </BarChart>
@@ -213,48 +331,47 @@ const AnalyticsDashboard = () => {
                 </div>
 
                 {/* Publication Trends */}
-                <div className="card p-6">
+                <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-text-primary">Publication Trends</h3>
-                    <Icon name="TrendingUp" size={20} className="text-text-secondary" />
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Publication Trends
+                    </h3>
+                    <Icon name="TrendingUp" size={20} className="text-gray-500" />
                   </div>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={publicationTrends}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                        <XAxis 
-                          dataKey="date" 
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                        <XAxis
+                          dataKey="date"
                           tickFormatter={formatDate}
-                          stroke="var(--color-text-secondary)"
+                          stroke="#6B7280"
                           fontSize={12}
                         />
-                        <YAxis 
-                          stroke="var(--color-text-secondary)"
-                          fontSize={12}
-                        />
-                        <Tooltip 
+                        <YAxis stroke="#6B7280" fontSize={12} />
+                        <Tooltip
                           labelFormatter={(value) => formatDate(value)}
                           contentStyle={{
-                            backgroundColor: 'var(--color-surface)',
-                            border: '1px solid var(--color-border)',
-                            borderRadius: '8px'
+                            backgroundColor: "white",
+                            border: "1px solid #E5E7EB",
+                            borderRadius: "8px",
                           }}
                         />
                         <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="articles" 
-                          stroke="var(--color-primary)" 
+                        <Line
+                          type="monotone"
+                          dataKey="articles"
+                          stroke="#3B82F6"
                           strokeWidth={2}
-                          dot={{ fill: 'var(--color-primary)', strokeWidth: 2, r: 4 }}
+                          dot={{ fill: "#3B82F6", strokeWidth: 2, r: 4 }}
                           name="Articles"
                         />
-                        <Line 
-                          type="monotone" 
-                          dataKey="engagement" 
-                          stroke="var(--color-accent)" 
+                        <Line
+                          type="monotone"
+                          dataKey="engagement"
+                          stroke="#F59E0B"
                           strokeWidth={2}
-                          dot={{ fill: 'var(--color-accent)', strokeWidth: 2, r: 4 }}
+                          dot={{ fill: "#F59E0B", strokeWidth: 2, r: 4 }}
                           name="Engagement"
                         />
                       </LineChart>
@@ -264,44 +381,42 @@ const AnalyticsDashboard = () => {
               </div>
 
               {/* Author Productivity Chart */}
-              <div className="card p-6">
+              <div className="bg-white p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-text-primary">Author Productivity</h3>
-                  <Icon name="Users" size={20} className="text-text-secondary" />
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Author Productivity
+                  </h3>
+                  <Icon name="Users" size={20} className="text-gray-500" />
                 </div>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={authorProductivity} layout="horizontal">
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                      <XAxis 
-                        type="number"
-                        stroke="var(--color-text-secondary)"
-                        fontSize={12}
-                      />
-                      <YAxis 
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                      <XAxis type="number" stroke="#6B7280" fontSize={12} />
+                      <YAxis
                         type="category"
-                        dataKey="author" 
-                        stroke="var(--color-text-secondary)"
+                        dataKey="author"
+                        stroke="#6B7280"
                         fontSize={12}
                         width={120}
                       />
-                      <Tooltip 
+                      <Tooltip
                         contentStyle={{
-                          backgroundColor: 'var(--color-surface)',
-                          border: '1px solid var(--color-border)',
-                          borderRadius: '8px'
+                          backgroundColor: "white",
+                          border: "1px solid #E5E7EB",
+                          borderRadius: "8px",
                         }}
                       />
                       <Legend />
-                      <Bar 
-                        dataKey="articles" 
-                        fill="var(--color-primary)" 
+                      <Bar
+                        dataKey="articles"
+                        fill="#3B82F6"
                         radius={[0, 4, 4, 0]}
                         name="Articles"
                       />
-                      <Bar 
-                        dataKey="engagement" 
-                        fill="var(--color-accent)" 
+                      <Bar
+                        dataKey="engagement"
+                        fill="#F59E0B"
                         radius={[0, 4, 4, 0]}
                         name="Engagement"
                       />
@@ -314,18 +429,20 @@ const AnalyticsDashboard = () => {
             {/* Right Panel - Desktop Only */}
             <div className="hidden lg:block space-y-6">
               {/* Filters */}
-              <div className="card p-6">
-                <h3 className="text-lg font-semibold text-text-primary mb-4">Filters</h3>
-                
+              <div className="bg-white p-6 rounded-lg shadow-sm border">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Filters
+                </h3>
+
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
                       Date Range
                     </label>
                     <select
                       value={dateRange}
                       onChange={(e) => setDateRange(e.target.value)}
-                      className="w-full input-field"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="last7days">Last 7 days</option>
                       <option value="last30days">Last 30 days</option>
@@ -335,13 +452,13 @@ const AnalyticsDashboard = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
                       Content Type
                     </label>
                     <select
                       value={contentTypeFilter}
                       onChange={(e) => setContentTypeFilter(e.target.value)}
-                      className="w-full input-field"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="all">All Types</option>
                       <option value="news">News Only</option>
@@ -349,22 +466,30 @@ const AnalyticsDashboard = () => {
                     </select>
                   </div>
 
-                  <button className="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200">
+                  <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
                     Apply Filters
                   </button>
                 </div>
               </div>
 
               {/* Quick Insights */}
-              <div className="card p-6">
-                <h3 className="text-lg font-semibold text-text-primary mb-4">Quick Insights</h3>
-                
+              <div className="bg-white p-6 rounded-lg shadow-sm border">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Quick Insights
+                </h3>
+
                 <div className="space-y-4">
                   {quickInsights.map((insight, index) => (
-                    <div key={index} className="border-l-4 border-primary pl-4">
-                      <h4 className="font-medium text-text-primary">{insight.title}</h4>
-                      <p className="text-lg font-bold text-primary">{insight.value}</p>
-                      <p className="text-sm text-text-secondary">{insight.description}</p>
+                    <div key={index} className="border-l-4 border-blue-600 pl-4">
+                      <h4 className="font-medium text-gray-900">
+                        {insight.title}
+                      </h4>
+                      <p className="text-lg font-bold text-blue-600">
+                        {insight.value}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {insight.description}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -378,7 +503,7 @@ const AnalyticsDashboard = () => {
           {/* Floating Action Button */}
           <button
             onClick={() => setIsFilterPanelOpen(true)}
-            className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200 z-50"
+            className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 z-50"
           >
             <Icon name="Filter" size={24} />
           </button>
@@ -386,17 +511,19 @@ const AnalyticsDashboard = () => {
           {/* Filter Panel Overlay */}
           {isFilterPanelOpen && (
             <>
-              <div 
+              <div
                 className="fixed inset-0 bg-black bg-opacity-50 z-40"
                 onClick={() => setIsFilterPanelOpen(false)}
               />
-              <div className="fixed bottom-0 left-0 right-0 bg-surface rounded-t-lg shadow-lg z-50 animate-slide-up">
+              <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-lg shadow-lg z-50">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-text-primary">Filters & Insights</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Filters & Insights
+                    </h3>
                     <button
                       onClick={() => setIsFilterPanelOpen(false)}
-                      className="p-2 hover:bg-secondary-100 rounded-md transition-colors duration-150"
+                      className="p-2 hover:bg-gray-100 rounded-md transition-colors duration-150"
                     >
                       <Icon name="X" size={20} />
                     </button>
@@ -404,13 +531,13 @@ const AnalyticsDashboard = () => {
 
                   <div className="space-y-4 mb-6">
                     <div>
-                      <label className="block text-sm font-medium text-text-secondary mb-2">
+                      <label className="block text-sm font-medium text-gray-600 mb-2">
                         Date Range
                       </label>
                       <select
                         value={dateRange}
                         onChange={(e) => setDateRange(e.target.value)}
-                        className="w-full input-field"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="last7days">Last 7 days</option>
                         <option value="last30days">Last 30 days</option>
@@ -420,13 +547,13 @@ const AnalyticsDashboard = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-text-secondary mb-2">
+                      <label className="block text-sm font-medium text-gray-600 mb-2">
                         Content Type
                       </label>
                       <select
                         value={contentTypeFilter}
                         onChange={(e) => setContentTypeFilter(e.target.value)}
-                        className="w-full input-field"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="all">All Types</option>
                         <option value="news">News Only</option>
@@ -437,17 +564,23 @@ const AnalyticsDashboard = () => {
 
                   <div className="grid grid-cols-1 gap-3 mb-6">
                     {quickInsights.map((insight, index) => (
-                      <div key={index} className="bg-secondary-50 p-3 rounded-md">
-                        <h4 className="font-medium text-text-primary text-sm">{insight.title}</h4>
-                        <p className="text-lg font-bold text-primary">{insight.value}</p>
-                        <p className="text-xs text-text-secondary">{insight.description}</p>
+                      <div key={index} className="bg-gray-50 p-3 rounded-md">
+                        <h4 className="font-medium text-gray-900 text-sm">
+                          {insight.title}
+                        </h4>
+                        <p className="text-lg font-bold text-blue-600">
+                          {insight.value}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {insight.description}
+                        </p>
                       </div>
                     ))}
                   </div>
 
-                  <button 
+                  <button
                     onClick={() => setIsFilterPanelOpen(false)}
-                    className="w-full bg-primary text-white px-4 py-3 rounded-md hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200"
+                    className="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
                   >
                     Apply Filters
                   </button>

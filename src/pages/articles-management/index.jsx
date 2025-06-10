@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from 'components/ui/Header';
 import Icon from 'components/AppIcon';
+import { useNewsData } from 'hooks/useNewsData';
 
 import ArticleCard from './components/ArticleCard';
 import ArticleTable from './components/ArticleTable';
@@ -32,7 +33,7 @@ const ArticlesManagement = () => {
     status: 'all'
   });
 
-  // Mock articles data
+  // FIX 1: Move mockArticles definition BEFORE useNewsData hook
   const mockArticles = [
     {
       id: 1,
@@ -120,7 +121,7 @@ const ArticlesManagement = () => {
       type: "news",
       status: "published",
       thumbnail: "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=400&h=250&fit=crop",
-      excerpt: "Latest developments from the Mars exploration mission reveal fascinating discoveries about the Red Planet\'s geology.",
+      excerpt: "Latest developments from the Mars exploration mission reveal fascinating discoveries about the Red Planet's geology.",
       readTime: "9 min read",
       views: 18700,
       category: "Science"
@@ -140,16 +141,61 @@ const ArticlesManagement = () => {
     }
   ];
 
+  // FIX 2: Add error handling and proper data structure
+  const { 
+    data: newsData, 
+    isLoading: isNewsLoading, 
+    usingMockData, 
+    error 
+  } = useNewsData(
+    'everything',
+    { q: 'technology', pageSize: 20 },
+    mockArticles
+  );
+
+  // FIX 3: Add null safety and better data transformation
+  const transformedArticles = useMemo(() => {
+    if (!newsData || newsData.length === 0) {
+      return mockArticles;
+    }
+
+    if (usingMockData) {
+      return newsData;
+    }
+
+    return newsData.map((article, index) => ({
+      id: index + 1,
+      title: article.title || 'Untitled Article',
+      author: article.author || 'Unknown Author',
+      date: article.publishedAt ? article.publishedAt.split('T')[0] : new Date().toISOString().split('T')[0],
+      type: 'news', // NewsAPI doesn't have types, default to news
+      status: 'published',
+      thumbnail: article.urlToImage || 'https://via.placeholder.com/400x250',
+      excerpt: article.description || 'No description available',
+      readTime: `${Math.max(1, Math.floor((article.content?.length || 500) / 500))} min read`,
+      views: Math.floor(Math.random() * 20000),
+      category: 'Technology' // Default category
+    }));
+  }, [newsData, usingMockData, mockArticles]);
+
   // Get unique authors for filter
   const availableAuthors = useMemo(() => {
-    return [...new Set(mockArticles.map(article => article.author))];
-  }, []);
+    if (!transformedArticles || transformedArticles.length === 0) {
+      return [];
+    }
+    return [...new Set(transformedArticles.map(article => article.author))];
+  }, [transformedArticles]);
 
   // Filter and sort articles
   const filteredAndSortedArticles = useMemo(() => {
-    let filtered = mockArticles.filter(article => {
+    if (!transformedArticles || transformedArticles.length === 0) {
+      return [];
+    }
+
+    let filtered = transformedArticles.filter(article => {
       // Search filter
-      if (searchQuery && !article.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      if (searchQuery && 
+          !article.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
           !article.author.toLowerCase().includes(searchQuery.toLowerCase()) &&
           !article.excerpt.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
@@ -203,8 +249,8 @@ const ArticlesManagement = () => {
           bValue = b.views;
           break;
         default:
-          aValue = a.date;
-          bValue = b.date;
+          aValue = new Date(a.date);
+          bValue = new Date(b.date);
       }
 
       if (sortOrder === 'asc') {
@@ -215,7 +261,7 @@ const ArticlesManagement = () => {
     });
 
     return filtered;
-  }, [mockArticles, searchQuery, filters, sortBy, sortOrder]);
+  }, [transformedArticles, searchQuery, filters, sortBy, sortOrder]);
 
   // Handle URL search params
   useEffect(() => {
@@ -258,6 +304,28 @@ const ArticlesManagement = () => {
     console.log(`Performing ${action} on article:`, articleId);
   };
 
+  // FIX 4: Add error state handling
+  if (error && !usingMockData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="pt-16 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Icon name="AlertTriangle" size={48} className="mx-auto mb-4 text-red-500" />
+            <h2 className="text-xl font-semibold text-text-primary mb-2">Error Loading Articles</h2>
+            <p className="text-text-secondary mb-4">{error.message || "Something went wrong"}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -268,6 +336,13 @@ const ArticlesManagement = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-text-primary mb-2">Articles Management</h1>
             <p className="text-text-secondary">Manage and organize your news articles and blog posts</p>
+            {/* FIX 5: Add mock data indicator */}
+            {usingMockData && (
+              <div className="mt-2 text-sm text-warning-600 bg-warning-50 px-3 py-1 rounded inline-flex items-center">
+                <Icon name="AlertTriangle" size={14} className="mr-1" />
+                Showing mock data due to API limitations
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6">
@@ -327,7 +402,7 @@ const ArticlesManagement = () => {
                       <button
                         onClick={() => setViewMode('card')}
                         className={`p-2 rounded transition-colors duration-150 ${
-                          viewMode === 'card' ?'bg-surface text-primary shadow-sm' :'text-secondary-600 hover:text-text-primary'
+                          viewMode === 'card' ? 'bg-surface text-primary shadow-sm' : 'text-secondary-600 hover:text-text-primary'
                         }`}
                       >
                         <Icon name="Grid3X3" size={16} />
@@ -335,7 +410,7 @@ const ArticlesManagement = () => {
                       <button
                         onClick={() => setViewMode('table')}
                         className={`p-2 rounded transition-colors duration-150 ${
-                          viewMode === 'table' ?'bg-surface text-primary shadow-sm' :'text-secondary-600 hover:text-text-primary'
+                          viewMode === 'table' ? 'bg-surface text-primary shadow-sm' : 'text-secondary-600 hover:text-text-primary'
                         }`}
                       >
                         <Icon name="List" size={16} />
@@ -355,7 +430,7 @@ const ArticlesManagement = () => {
               )}
 
               {/* Articles Display */}
-              {isLoading ? (
+              {isNewsLoading || isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="flex items-center gap-3 text-text-secondary">
                     <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
