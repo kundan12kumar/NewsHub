@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -12,19 +13,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { FileText, TrendingUp, Star, Users, BarChart3, FileDown, Download, AlertTriangle, Filter, X } from "lucide-react";
+import Header from "components/ui/Header";
 
-// Mock Header component
-const Header = () => (
-  <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-30 border-b">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-center h-16">
-        <h1 className="text-xl font-bold text-gray-900">News Analytics</h1>
-      </div>
-    </div>
-  </header>
-);
 
-// Mock Icon component using lucide-react
+// Icon component using lucide-react
 const Icon = ({ name, size = 16, color, className = "" }) => {
   const iconMap = {
     FileText,
@@ -61,12 +53,13 @@ const useNewsData = () => {
 };
 
 const AnalyticsDashboard = () => {
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState("last30days");
   const [contentTypeFilter, setContentTypeFilter] = useState("all");
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data for analytics - Fixed: Use consistent variable name
+  // Mock data for analytics
   const kpiData = {
     totalArticles: 1247,
     totalEngagement: 89432,
@@ -171,7 +164,6 @@ const AnalyticsDashboard = () => {
     );
   }
 
-  // Fixed: Define these variables after the helper functions
   const articlesByType = usingMockData
     ? mockArticlesByType
     : processArticlesByType(newsData);
