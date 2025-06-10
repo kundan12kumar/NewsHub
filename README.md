@@ -53,3 +53,4 @@ react_app/
 ├── tailwind.config.js  # Tailwind CSS configuration
 └── vite.config.js      # Vite configuration
 ```
+in case newsAPI daily limit of 1,000 responsed is reached we have also used mock data to show analytics and articles
