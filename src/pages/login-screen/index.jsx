@@ -22,8 +22,7 @@ const LoginScreen = () => {
   };
 
   // Google OAuth configuration - REPLACE WITH YOUR ACTUAL CLIENT ID
-  const GOOGLE_CLIENT_ID =
-    "137303626540-bioipt09v1q2fasciecc8bom5qcipc7r.apps.googleusercontent.com";
+  const GOOGLE_CLIENT_ID =import.meta.env.GOOGLE_CLIENT_ID;
 
   // Check if user is already logged in
   useEffect(() => {
