@@ -277,30 +277,11 @@ const PayoutManagementAdminOnly = () => {
             <div>
               <h1 className="text-3xl font-bold text-text-primary mb-2">Payout Management</h1>
               <p className="text-text-secondary">Configure rates, calculate payments, and manage payouts for content creators</p>
-              <div className="mt-2 text-sm text-green-600 bg-green-50 px-3 py-1 rounded inline-flex items-center">
-                <Icon name="CheckCircle" size={14} className="mr-1" />
-                Using live NewsAPI data from {transformedArticles.length} articles
-              </div>
             </div>
             <div className="mt-4 lg:mt-0 flex items-center space-x-3">
               <div className="flex items-center space-x-2 text-sm text-text-secondary">
                 <Icon name="Shield" size={16} className="text-primary" />
                 <span>Admin Access</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Data Summary */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start">
-              <Icon name="Info" size={20} className="text-blue-600 mr-3 mt-0.5" />
-              <div>
-                <h3 className="text-blue-900 font-medium mb-1">Live NewsAPI Integration</h3>
-                <p className="text-blue-700 text-sm">
-                  Payout calculations are now based on real NewsAPI data. Found {payoutData.length} authors 
-                  from {transformedArticles.length} articles. Payment amounts are calculated based on article 
-                  content quality, length, and engagement metrics from live news sources.
-                </p>
               </div>
             </div>
           </div>

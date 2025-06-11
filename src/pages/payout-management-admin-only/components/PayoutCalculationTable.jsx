@@ -1,26 +1,26 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import Icon from 'components/AppIcon';
+import React, { useState, useEffect, useMemo } from "react";
+import Icon from "components/AppIcon";
 
-const PayoutCalculationTable = ({ 
-  payoutData, 
-  payoutRates, 
-  selectedAuthors, 
-  onSelectedAuthorsChange, 
-  onBulkStatusUpdate 
+const PayoutCalculationTable = ({
+  payoutData,
+  payoutRates,
+  selectedAuthors,
+  onSelectedAuthorsChange,
+  onBulkStatusUpdate,
 }) => {
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
   React.useEffect(() => {
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
     setSortConfig({ key, direction });
   };
@@ -32,20 +32,20 @@ const PayoutCalculationTable = ({
       let aValue = a[sortConfig.key];
       let bValue = b[sortConfig.key];
 
-      if (sortConfig.key === 'totalAmount') {
+      if (sortConfig.key === "totalAmount") {
         aValue = parseFloat(aValue);
         bValue = parseFloat(bValue);
       }
 
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
       return 0;
     });
   }, [payoutData, sortConfig]);
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      onSelectedAuthorsChange(payoutData.map(author => author.id));
+      onSelectedAuthorsChange(payoutData.map((author) => author.id));
     } else {
       onSelectedAuthorsChange([]);
     }
@@ -55,21 +55,23 @@ const PayoutCalculationTable = ({
     if (checked) {
       onSelectedAuthorsChange([...selectedAuthors, authorId]);
     } else {
-      onSelectedAuthorsChange(selectedAuthors.filter(id => id !== authorId));
+      onSelectedAuthorsChange(selectedAuthors.filter((id) => id !== authorId));
     }
   };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { color: 'bg-warning-100 text-warning-700', icon: 'Clock' },
-      processing: { color: 'bg-blue-100 text-blue-700', icon: 'Loader' },
-      paid: { color: 'bg-success-100 text-success-700', icon: 'CheckCircle' }
+      pending: { color: "bg-warning-100 text-warning-700", icon: "Clock" },
+      processing: { color: "bg-blue-100 text-blue-700", icon: "Loader" },
+      paid: { color: "bg-success-100 text-success-700", icon: "CheckCircle" },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
 
     return (
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+      <span
+        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}
+      >
         <Icon name={config.icon} size={12} className="mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
@@ -77,8 +79,12 @@ const PayoutCalculationTable = ({
   };
 
   const calculateTotalArticles = (author) => {
-    return Object.values(author.newsArticles).reduce((sum, count) => sum + count, 0) +
-           Object.values(author.blogPosts).reduce((sum, count) => sum + count, 0);
+    return (
+      Object.values(author.newsArticles).reduce(
+        (sum, count) => sum + count,
+        0
+      ) + Object.values(author.blogPosts).reduce((sum, count) => sum + count, 0)
+    );
   };
 
   if (isMobileView) {
@@ -86,12 +92,16 @@ const PayoutCalculationTable = ({
       <div className="bg-surface rounded-lg shadow-sm border border-border mb-6">
         <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-text-primary">Payout Calculations</h3>
+            <h3 className="text-lg font-semibold text-text-primary">
+              Payout Calculations
+            </h3>
             {selectedAuthors.length > 0 && (
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-text-secondary">{selectedAuthors.length} selected</span>
+                <span className="text-sm text-text-secondary">
+                  {selectedAuthors.length} selected
+                </span>
                 <button
-                  onClick={() => onBulkStatusUpdate(selectedAuthors, 'paid')}
+                  onClick={() => onBulkStatusUpdate(selectedAuthors, "paid")}
                   className="px-3 py-1 bg-success-500 text-white rounded-md text-xs font-medium hover:bg-success-600 transition-colors duration-150"
                 >
                   Mark as Paid
@@ -109,12 +119,18 @@ const PayoutCalculationTable = ({
                   <input
                     type="checkbox"
                     checked={selectedAuthors.includes(author.id)}
-                    onChange={(e) => handleSelectAuthor(author.id, e.target.checked)}
+                    onChange={(e) =>
+                      handleSelectAuthor(author.id, e.target.checked)
+                    }
                     className="w-4 h-4 text-primary-600 border-border rounded focus:ring-primary-500"
                   />
                   <div>
-                    <h4 className="font-medium text-text-primary">{author.authorName}</h4>
-                    <p className="text-sm text-text-secondary">{author.email}</p>
+                    <h4 className="font-medium text-text-primary">
+                      {author.authorName}
+                    </h4>
+                    <p className="text-sm text-text-secondary">
+                      {author.email}
+                    </p>
                   </div>
                 </div>
                 {getStatusBadge(author.paymentStatus)}
@@ -122,17 +138,26 @@ const PayoutCalculationTable = ({
 
               <div className="grid grid-cols-2 gap-4 mb-3">
                 <div>
-                  <p className="text-xs text-text-secondary mb-1">Total Articles</p>
-                  <p className="font-medium text-text-primary">{calculateTotalArticles(author)}</p>
+                  <p className="text-xs text-text-secondary mb-1">
+                    Total Articles
+                  </p>
+                  <p className="font-medium text-text-primary">
+                    {calculateTotalArticles(author)}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs text-text-secondary mb-1">Total Amount</p>
-                  <p className="font-bold text-lg text-primary-600">${author.totalAmount.toLocaleString()}</p>
+                  <p className="text-xs text-text-secondary mb-1">
+                    Total Amount
+                  </p>
+                  <p className="font-bold text-lg text-primary-600">
+                    ${author.totalAmount.toLocaleString()}
+                  </p>
                 </div>
               </div>
 
               <div className="text-xs text-text-secondary">
-                Last Payment: {new Date(author.lastPayment).toLocaleDateString()}
+                Last Payment:{" "}
+                {new Date(author.lastPayment).toLocaleDateString()}
               </div>
             </div>
           ))}
@@ -145,20 +170,26 @@ const PayoutCalculationTable = ({
     <div className="bg-surface rounded-lg shadow-sm border border-border mb-6">
       <div className="p-6 border-b border-border">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-text-primary">Payout Calculations</h3>
+          <h3 className="text-lg font-semibold text-text-primary">
+            Payout Calculations
+          </h3>
           {selectedAuthors.length > 0 && (
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-text-secondary">{selectedAuthors.length} authors selected</span>
+              <span className="text-sm text-text-secondary">
+                {selectedAuthors.length} authors selected
+              </span>
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => onBulkStatusUpdate(selectedAuthors, 'processing')}
+                  onClick={() =>
+                    onBulkStatusUpdate(selectedAuthors, "processing")
+                  }
                   className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition-colors duration-150"
                 >
                   Mark as Processing
                 </button>
                 <button
-                  onClick={() => onBulkStatusUpdate(selectedAuthors, 'paid')}
-                  className="px-4 py-2 bg-success-500 text-white rounded-md text-sm font-medium hover:bg-success-600 transition-colors duration-150"
+                  onClick={() => onBulkStatusUpdate(selectedAuthors, "paid")}
+                  className="px-4 py-2 bg-success text-white rounded-md text-sm font-medium hover:bg-success-600 transition-colors duration-150"
                 >
                   Mark as Paid
                 </button>
@@ -169,50 +200,57 @@ const PayoutCalculationTable = ({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full table-auto">
+          {" "}
+          {/* Changed to table-auto */}
           <thead className="bg-secondary-50">
             <tr>
-              <th className="px-6 py-3 text-left">
+              <th className="px-4 py-3 text-left w-12">
+                {" "}
+                {/* Checkbox column */}
                 <input
                   type="checkbox"
-                  checked={selectedAuthors.length === payoutData.length && payoutData.length > 0}
+                  checked={
+                    selectedAuthors.length === payoutData.length &&
+                    payoutData.length > 0
+                  }
                   onChange={(e) => handleSelectAll(e.target.checked)}
                   className="w-4 h-4 text-primary-600 border-border rounded focus:ring-primary-500"
                 />
               </th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary"
-                onClick={() => handleSort('authorName')}
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary w-[240px]"
+                onClick={() => handleSort("authorName")}
               >
                 <div className="flex items-center space-x-1">
                   <span>Author</span>
                   <Icon name="ArrowUpDown" size={12} />
                 </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider min-w-[180px]">
                 Articles Breakdown
               </th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary"
-                onClick={() => handleSort('totalAmount')}
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary whitespace-nowrap"
+                onClick={() => handleSort("totalAmount")}
               >
                 <div className="flex items-center space-x-1">
                   <span>Total Amount</span>
                   <Icon name="ArrowUpDown" size={12} />
                 </div>
               </th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary"
-                onClick={() => handleSort('paymentStatus')}
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary whitespace-nowrap"
+                onClick={() => handleSort("paymentStatus")}
               >
                 <div className="flex items-center space-x-1">
                   <span>Status</span>
                   <Icon name="ArrowUpDown" size={12} />
                 </div>
               </th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary"
-                onClick={() => handleSort('lastPayment')}
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary whitespace-nowrap"
+                onClick={() => handleSort("lastPayment")}
               >
                 <div className="flex items-center space-x-1">
                   <span>Last Payment</span>
@@ -223,46 +261,72 @@ const PayoutCalculationTable = ({
           </thead>
           <tbody className="divide-y divide-border">
             {sortedData.map((author) => (
-              <tr key={author.id} className="hover:bg-secondary-50 transition-colors duration-150">
-                <td className="px-6 py-4">
+              <tr
+                key={author.id}
+                className="hover:bg-secondary-50 transition-colors duration-150"
+              >
+                <td className="px-4 py-4">
                   <input
                     type="checkbox"
                     checked={selectedAuthors.includes(author.id)}
-                    onChange={(e) => handleSelectAuthor(author.id, e.target.checked)}
+                    onChange={(e) =>
+                      handleSelectAuthor(author.id, e.target.checked)
+                    }
                     className="w-4 h-4 text-primary-600 border-border rounded focus:ring-primary-500"
                   />
                 </td>
-                <td className="px-6 py-4">
-                  <div>
-                    <div className="font-medium text-text-primary">{author.authorName}</div>
-                    <div className="text-sm text-text-secondary">{author.email}</div>
+                <td className="px-4 py-4 w-[240px]">
+                  <div className="flex flex-col max-w-[240px]">
+                    <div
+                      className="font-medium text-text-primary truncate"
+                      title={author.authorName}
+                    >
+                      {author.authorName}
+                    </div>
+                    <div
+                      className="text-sm text-text-secondary truncate"
+                      title={author.email}
+                    >
+                      {author.email}
+                    </div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-4 py-4 min-w-[180px]">
+                  {" "}
+                  {/* Minimum width */}
                   <div className="space-y-1">
-                    <div className="text-sm">
-                      <span className="font-medium">News:</span> 
+                    <div className="text-sm whitespace-nowrap">
+                      <span className="font-medium">News:</span>
                       <span className="ml-1 text-text-secondary">
-                        B:{author.newsArticles.basic} P:{author.newsArticles.premium} F:{author.newsArticles.featured}
+                        B:{author.newsArticles.basic} P:
+                        {author.newsArticles.premium} F:
+                        {author.newsArticles.featured}
                       </span>
                     </div>
-                    <div className="text-sm">
+                    <div className="text-sm whitespace-nowrap">
                       <span className="font-medium">Blogs:</span>
                       <span className="ml-1 text-text-secondary">
-                        B:{author.blogPosts.basic} P:{author.blogPosts.premium} F:{author.blogPosts.featured}
+                        B:{author.blogPosts.basic} P:{author.blogPosts.premium}{" "}
+                        F:{author.blogPosts.featured}
                       </span>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-4 py-4 whitespace-nowrap">
+                  {" "}
+                  {/* Prevent wrapping */}
                   <div className="font-bold text-lg text-primary-600">
                     ${author.totalAmount.toLocaleString()}
                   </div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-4 py-4 whitespace-nowrap">
+                  {" "}
+                  {/* Prevent wrapping */}
                   {getStatusBadge(author.paymentStatus)}
                 </td>
-                <td className="px-6 py-4 text-sm text-text-secondary">
+                <td className="px-4 py-4 text-sm text-text-secondary whitespace-nowrap">
+                  {" "}
+                  {/* Prevent wrapping */}
                   {new Date(author.lastPayment).toLocaleDateString()}
                 </td>
               </tr>
