@@ -1,5 +1,4 @@
-import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -12,7 +11,18 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { FileText, TrendingUp, Star, Users, BarChart3, FileDown, Download, AlertTriangle, Filter, X } from "lucide-react";
+import {
+  FileText,
+  TrendingUp,
+  Star,
+  Users,
+  BarChart3,
+  FileDown,
+  Download,
+  AlertTriangle,
+  Filter,
+  X,
+} from "lucide-react";
 import Header from "components/ui/Header";
 import { useNewsData } from "hooks/useNewsData";
 
@@ -28,43 +38,34 @@ const Icon = ({ name, size = 16, color, className = "" }) => {
     FileDown,
     Download,
     Filter,
-    X
+    X,
   };
-  
+
   const IconComponent = iconMap[name];
   if (!IconComponent) return null;
-  
-  return (
-    <IconComponent 
-      size={size} 
-      color={color} 
-      className={className}
-    />
-  );
+
+  return <IconComponent size={size} color={color} className={className} />;
 };
 
 const AnalyticsDashboard = () => {
-  const navigate = useNavigate();
-  const [dateRange, setDateRange] = useState("last30days");
-  const [contentTypeFilter, setContentTypeFilter] = useState("all");
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // UNIFIED API CALL - Same parameters as Dashboard component
-  const allArticlesParams = useMemo(() => ({ 
-    q: "technology",
-    pageSize: 100, // Same as Dashboard
-    sortBy: "publishedAt",
-  }), []);
+  // UNIFIED API CALL
+  const allArticlesParams = useMemo(
+    () => ({
+      q: "technology",
+      pageSize: 100,
+      sortBy: "publishedAt",
+    }),
+    []
+  );
 
   // Single API call for all data (same as Dashboard)
   const {
     data: allArticles,
     isLoading: allArticlesLoading,
     error: allArticlesError,
-  } = useNewsData("everything", allArticlesParams, []); // Use "everything" endpoint like Dashboard
+  } = useNewsData("everything", allArticlesParams, []);
 
-  // Transform all articles (same logic as Dashboard)
+  // Transform all articles
   const transformedArticles = useMemo(() => {
     if (!allArticles || allArticles.length === 0) {
       return [];
@@ -86,7 +87,10 @@ const AnalyticsDashboard = () => {
       excerpt: article.description || "No description available",
       url: article.url,
       content: article.content || article.description || "No content available",
-      readTime: `${Math.max(1, Math.floor((article.content?.length || 500) / 500))} min read`,
+      readTime: `${Math.max(
+        1,
+        Math.floor((article.content?.length || 500) / 500)
+      )} min read`,
       views: Math.floor(Math.random() * 20000),
       category: "Technology",
       source: article.source?.name || "Unknown Source",
@@ -108,18 +112,25 @@ const AnalyticsDashboard = () => {
     const totalArticles = transformedArticles.length;
 
     // Calculate total engagement (sum of all views)
-    const totalEngagement = transformedArticles.reduce((sum, article) => sum + article.views, 0);
+    const totalEngagement = transformedArticles.reduce(
+      (sum, article) => sum + article.views,
+      0
+    );
 
     // Find top performing content (highest views)
-    const topPerformingArticle = transformedArticles.reduce((top, article) => 
-      article.views > top.views ? article : top, transformedArticles[0]
+    const topPerformingArticle = transformedArticles.reduce(
+      (top, article) => (article.views > top.views ? article : top),
+      transformedArticles[0]
     );
 
     // Count unique authors
     const uniqueAuthors = new Set(
       transformedArticles
-        .map(article => article.author)
-        .filter(author => author && author !== 'Unknown Author' && author.trim() !== '')
+        .map((article) => article.author)
+        .filter(
+          (author) =>
+            author && author !== "Unknown Author" && author.trim() !== ""
+        )
     );
 
     return {
@@ -141,7 +152,7 @@ const AnalyticsDashboard = () => {
 
     // For NewsAPI, we can categorize by source or content type
     const sourceCategories = {};
-    transformedArticles.forEach(article => {
+    transformedArticles.forEach((article) => {
       const source = article.source || "Unknown";
       sourceCategories[source] = (sourceCategories[source] || 0) + 1;
     });
@@ -152,7 +163,7 @@ const AnalyticsDashboard = () => {
       .map(([type, count]) => ({
         type: type.length > 15 ? type.substring(0, 15) + "..." : type,
         count,
-        percentage: Math.round((count / total) * 100)
+        percentage: Math.round((count / total) * 100),
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 6); // Top 6 sources
@@ -166,15 +177,15 @@ const AnalyticsDashboard = () => {
 
     // Group articles by date and calculate engagement
     const trendsMap = {};
-    
-    transformedArticles.forEach(article => {
+
+    transformedArticles.forEach((article) => {
       const date = article.date;
       if (date) {
         if (!trendsMap[date]) {
           trendsMap[date] = {
             date,
             articles: 0,
-            engagement: 0
+            engagement: 0,
           };
         }
         trendsMap[date].articles += 1;
@@ -184,7 +195,7 @@ const AnalyticsDashboard = () => {
 
     return Object.values(trendsMap)
       .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .slice(-7); // Last 7 days
+      .slice(-7);
   }, [transformedArticles]);
 
   // Calculate author productivity from real data
@@ -195,15 +206,15 @@ const AnalyticsDashboard = () => {
 
     // Group by author and calculate metrics
     const authorStats = {};
-    
-    transformedArticles.forEach(article => {
+
+    transformedArticles.forEach((article) => {
       const author = article.author;
-      if (author && author !== 'Unknown Author' && author.trim() !== '') {
+      if (author && author !== "Unknown Author" && author.trim() !== "") {
         if (!authorStats[author]) {
           authorStats[author] = {
             author,
             articles: 0,
-            engagement: 0
+            engagement: 0,
           };
         }
         authorStats[author].articles += 1;
@@ -246,7 +257,11 @@ const AnalyticsDashboard = () => {
                 </p>
                 {allArticlesLoading && (
                   <div className="mt-2 text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded inline-flex items-center">
-                    <Icon name="TrendingUp" size={14} className="mr-1 animate-spin" />
+                    <Icon
+                      name="TrendingUp"
+                      size={14}
+                      className="mr-1 animate-spin"
+                    />
                     Loading analytics data...
                   </div>
                 )}
@@ -262,7 +277,7 @@ const AnalyticsDashboard = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Main Content Area */}
-            <div className="lg:col-span-3 space-y-6">
+            <div className="lg:col-span-4 space-y-6">
               {/* KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -314,7 +329,10 @@ const AnalyticsDashboard = () => {
                       {allArticlesLoading ? (
                         <div className="w-24 h-6 bg-gray-200 animate-pulse rounded"></div>
                       ) : (
-                        <p className="text-sm font-bold text-gray-900 truncate max-w-[120px]" title={kpiData.topPerformingContent}>
+                        <p
+                          className="text-sm font-bold text-gray-900 truncate max-w-[120px]"
+                          title={kpiData.topPerformingContent}
+                        >
                           {kpiData.topPerformingContent}
                         </p>
                       )}
@@ -354,7 +372,11 @@ const AnalyticsDashboard = () => {
                     <h3 className="text-lg font-semibold text-gray-900">
                       Articles by Source
                     </h3>
-                    <Icon name="BarChart3" size={20} className="text-gray-500" />
+                    <Icon
+                      name="BarChart3"
+                      size={20}
+                      className="text-gray-500"
+                    />
                   </div>
                   <div className="h-64">
                     {allArticlesLoading ? (
@@ -364,11 +386,14 @@ const AnalyticsDashboard = () => {
                     ) : articlesByType.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={articlesByType}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                          <XAxis 
-                            dataKey="type" 
-                            stroke="#6B7280" 
-                            fontSize={12} 
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#E5E7EB"
+                          />
+                          <XAxis
+                            dataKey="type"
+                            stroke="#6B7280"
+                            fontSize={12}
                             angle={-45}
                             textAnchor="end"
                             height={80}
@@ -391,7 +416,11 @@ const AnalyticsDashboard = () => {
                     ) : (
                       <div className="flex items-center justify-center h-full text-gray-500">
                         <div className="text-center">
-                          <Icon name="BarChart3" size={48} className="mx-auto mb-2 opacity-50" />
+                          <Icon
+                            name="BarChart3"
+                            size={48}
+                            className="mx-auto mb-2 opacity-50"
+                          />
                           <p>No data available</p>
                         </div>
                       </div>
@@ -405,7 +434,11 @@ const AnalyticsDashboard = () => {
                     <h3 className="text-lg font-semibold text-gray-900">
                       Publication Trends
                     </h3>
-                    <Icon name="TrendingUp" size={20} className="text-gray-500" />
+                    <Icon
+                      name="TrendingUp"
+                      size={20}
+                      className="text-gray-500"
+                    />
                   </div>
                   <div className="h-64">
                     {allArticlesLoading ? (
@@ -415,7 +448,10 @@ const AnalyticsDashboard = () => {
                     ) : publicationTrends.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={publicationTrends}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#E5E7EB"
+                          />
                           <XAxis
                             dataKey="date"
                             tickFormatter={formatDate}
@@ -453,78 +489,16 @@ const AnalyticsDashboard = () => {
                     ) : (
                       <div className="flex items-center justify-center h-full text-gray-500">
                         <div className="text-center">
-                          <Icon name="TrendingUp" size={48} className="mx-auto mb-2 opacity-50" />
+                          <Icon
+                            name="TrendingUp"
+                            size={48}
+                            className="mx-auto mb-2 opacity-50"
+                          />
                           <p>No trend data available</p>
                         </div>
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
-
-              {/* Author Productivity Chart */}
-              <div className="bg-white p-6 rounded-lg shadow-sm border">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Author Productivity
-                  </h3>
-                  <Icon name="Users" size={20} className="text-gray-500" />
-                </div>
-                <div className="h-80">
-                  {allArticlesLoading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  ) : authorProductivity.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={authorProductivity} layout="horizontal">
-                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                        <XAxis type="number" stroke="#6B7280" fontSize={12} />
-                        <YAxis
-                          type="category"
-                          dataKey="author"
-                          stroke="#6B7280"
-                          fontSize={12}
-                          width={120}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "white",
-                            border: "1px solid #E5E7EB",
-                            borderRadius: "8px",
-                          }}
-                        />
-                        <Legend />
-                        <Bar
-                          dataKey="articles"
-                          fill="#3B82F6"
-                          radius={[0, 4, 4, 0]}
-                          name="Articles"
-                        />
-                        <Bar
-                          dataKey="engagement"
-                          fill="#F59E0B"
-                          radius={[0, 4, 4, 0]}
-                          name="Engagement"
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                      <div className="text-center">
-                        <Icon name="Users" size={48} className="mx-auto mb-2 opacity-50" />
-                        <p>No author data available</p>
-                        {allArticlesError && (
-                          <button 
-                            onClick={handleRetry} 
-                            className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                          >
-                            Try Again
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

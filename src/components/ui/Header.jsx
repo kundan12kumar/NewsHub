@@ -1,7 +1,7 @@
 // /home/ubuntu/app/news_dashboard/src/components/ui/Header.jsx
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import Icon from '../AppIcon';
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import Icon from "../AppIcon";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -9,38 +9,45 @@ const Header = () => {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState("");
   const searchRef = useRef(null);
   const userMenuRef = useRef(null);
 
   const navigationItems = [
-    { label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard' },
-    { label: 'Articles', path: '/articles-management', icon: 'FileText' },
-    { label: 'Analytics', path: '/analytics-dashboard', icon: 'BarChart3' },
-    { label: 'Payouts', path: '/payout-management-admin-only', icon: 'DollarSign', adminOnly: true },
+    { label: "Dashboard", path: "/dashboard", icon: "LayoutDashboard" },
+    { label: "Articles", path: "/articles-management", icon: "FileText" },
+    { label: "Analytics", path: "/analytics-dashboard", icon: "BarChart3" },
+    {
+      label: "Payouts",
+      path: "/payout-management-admin-only",
+      icon: "DollarSign",
+      adminOnly: true,
+    },
   ];
 
   // Load user information on component mount
   useEffect(() => {
     try {
-      const userInfo = localStorage.getItem('newsHubUser');
+      const userInfo = localStorage.getItem("newsHubUser");
       if (userInfo) {
         const user = JSON.parse(userInfo);
-        setIsAdmin(user?.role === 'admin');
-        setUserName(user?.email || 'User');
+        setIsAdmin(user?.role === "admin");
+        setUserName(user?.email || "User");
       } else {
         // Redirect to login if no user info is found
-        navigate('/');
+        navigate("/");
       }
     } catch (error) {
-      console.error('Error loading user info:', error);
-      navigate('/');
+      console.error("Error loading user info:", error);
+      navigate("/");
     }
   }, [navigate]);
 
-  const visibleNavItems = navigationItems.filter(item => !item.adminOnly || isAdmin);
+  const visibleNavItems = navigationItems.filter(
+    (item) => !item.adminOnly || isAdmin
+  );
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -52,8 +59,8 @@ const Header = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleNavigation = (path) => {
@@ -64,19 +71,21 @@ const Header = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/articles-management?search=${encodeURIComponent(searchQuery)}`);
+      navigate(
+        `/articles-management?search=${encodeURIComponent(searchQuery)}`
+      );
       setIsSearchExpanded(false);
     }
   };
 
   const handleLogout = () => {
     try {
-      localStorage.removeItem('newsHubUser');
-      navigate('/');
+      localStorage.removeItem("newsHubUser");
+      navigate("/");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       // If we can't remove from localStorage, still try to navigate to login
-      navigate('/');
+      navigate("/");
     }
     setIsUserMenuOpen(false);
   };
@@ -92,7 +101,7 @@ const Header = () => {
           {/* Logo */}
           <div className="flex items-center">
             <button
-              onClick={() => handleNavigation('/dashboard')}
+              onClick={() => handleNavigation("/dashboard")}
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity duration-150"
             >
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -112,7 +121,8 @@ const Header = () => {
                 onClick={() => handleNavigation(item.path)}
                 className={`px-6 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
                   isActiveRoute(item.path)
-                    ? 'bg-primary-100 text-primary-700 border-b-2 border-primary' :'text-text-secondary hover:text-text-primary hover:bg-secondary-100'
+                    ? "bg-primary-100 text-primary-700 border-b-2 border-primary"
+                    : "text-text-secondary hover:text-text-primary hover:bg-secondary-100"
                 }`}
               >
                 {item.label}
@@ -125,16 +135,20 @@ const Header = () => {
             {/* Search Bar */}
             <div ref={searchRef} className="relative">
               <form onSubmit={handleSearchSubmit} className="flex items-center">
-                <div className={`relative transition-all duration-200 ${
-                  isSearchExpanded ? 'w-64' : 'w-10'
-                } md:w-64`}>
+                <div
+                  className={`relative transition-all duration-200 ${
+                    isSearchExpanded ? "w-64" : "w-10"
+                  } md:w-64`}
+                >
                   <input
                     type="text"
                     placeholder="Search articles..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className={`w-full pl-10 pr-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-150 ${
-                      isSearchExpanded ? 'opacity-100' : 'opacity-0 md:opacity-100'
+                      isSearchExpanded
+                        ? "opacity-100"
+                        : "opacity-0 md:opacity-100"
                     }`}
                   />
                   <button
@@ -158,9 +172,13 @@ const Header = () => {
                   <Icon name="User" size={16} color="white" />
                 </div>
                 <span className="hidden sm:block text-sm font-medium text-text-primary">
-                  {isAdmin ? 'Admin User' : 'Content Manager'}
+                  {isAdmin ? "Admin User" : "Content Manager"}
                 </span>
-                <Icon name="ChevronDown" size={16} className="text-text-secondary" />
+                <Icon
+                  name="ChevronDown"
+                  size={16}
+                  className="text-text-secondary"
+                />
               </button>
 
               {isUserMenuOpen && (
@@ -169,7 +187,7 @@ const Header = () => {
                     <div className="px-4 py-2 text-xs text-text-secondary border-b border-border">
                       {userName}
                       <div className="font-medium mt-1">
-                        {isAdmin ? 'Administrator' : 'Content Manager'}
+                        {isAdmin ? "Administrator" : "Content Manager"}
                       </div>
                     </div>
                     <button
@@ -197,7 +215,7 @@ const Header = () => {
       {/* Mobile Navigation Panel */}
       {isMobileMenuOpen && (
         <>
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-50 z-1015 md:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
           />
@@ -209,7 +227,8 @@ const Header = () => {
                   onClick={() => handleNavigation(item.path)}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-md text-left transition-colors duration-150 ${
                     isActiveRoute(item.path)
-                      ? 'bg-primary-100 text-primary-700' :'text-text-primary hover:bg-secondary-100'
+                      ? "bg-primary-100 text-primary-700"
+                      : "text-text-primary hover:bg-secondary-100"
                   }`}
                 >
                   <Icon name={item.icon} size={20} />

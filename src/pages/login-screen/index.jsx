@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "components/AppIcon";
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 const LoginScreen = () => {
   const navigate = useNavigate();
@@ -22,7 +22,8 @@ const LoginScreen = () => {
   };
 
   // Google OAuth configuration - REPLACE WITH YOUR ACTUAL CLIENT ID
-  const GOOGLE_CLIENT_ID = "137303626540-bioipt09v1q2fasciecc8bom5qcipc7r.apps.googleusercontent.com";
+  const GOOGLE_CLIENT_ID =
+    "137303626540-bioipt09v1q2fasciecc8bom5qcipc7r.apps.googleusercontent.com";
 
   // Check if user is already logged in
   useEffect(() => {
@@ -373,37 +374,38 @@ const LoginScreen = () => {
           </form>
 
           {/* Google Sign In Section */}
-          {GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== "YOUR_ACTUAL_GOOGLE_CLIENT_ID" && (
-            <>
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border" />
+          {GOOGLE_CLIENT_ID &&
+            GOOGLE_CLIENT_ID !== "YOUR_ACTUAL_GOOGLE_CLIENT_ID" && (
+              <>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-surface text-text-secondary">
+                      Or continue with Google
+                    </span>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-surface text-text-secondary">
-                    Or continue with Google
-                  </span>
-                </div>
-              </div>
 
-              {/* Google Login Button */}
-              <div className="mb-6">
-                <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-                  <GoogleLogin
-                    onSuccess={handleGoogleCallback}
-                    onError={() => {
-                      setErrors({ general: "Google login failed" });
-                    }}
-                    useOneTap={false}
-                    shape="rectangular"
-                    size="large"
-                    width="100%"
-                    text="continue_with"
-                  />
-                </GoogleOAuthProvider>
-              </div>
-            </>
-          )}
+                {/* Google Login Button */}
+                <div className="mb-6">
+                  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+                    <GoogleLogin
+                      onSuccess={handleGoogleCallback}
+                      onError={() => {
+                        setErrors({ general: "Google login failed" });
+                      }}
+                      useOneTap={false}
+                      shape="rectangular"
+                      size="large"
+                      width="100%"
+                      text="continue_with"
+                    />
+                  </GoogleOAuthProvider>
+                </div>
+              </>
+            )}
 
           {/* Mock Credentials Info */}
           <div className="mt-6 p-4 bg-secondary-100 rounded-md">
