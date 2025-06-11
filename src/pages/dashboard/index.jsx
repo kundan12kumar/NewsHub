@@ -5,15 +5,11 @@ import Icon from "components/AppIcon";
 
 import MetricCard from "./components/MetricCard";
 import ArticlePreviewCard from "./components/ArticlePreviewCard";
-import QuickFilters from "./components/QuickFilters";
-import RecentActivity from "./components/RecentActivity";
 import TrendChart from "./components/TrendChart";
 import { useNewsData } from "hooks/useNewsData";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [selectedDateRange, setSelectedDateRange] = useState("7days");
-  const [selectedContentType, setSelectedContentType] = useState("all");
   const [dashboardLoading, setDashboardLoading] = useState(true);
 
   // Helper function to validate and sanitize image URLs
@@ -63,35 +59,73 @@ const Dashboard = () => {
     `)}`;
   };
 
-  // API parameters - Using same parameters as article management page
-  const recentArticlesParams = useMemo(() => ({ 
-    country: "us", 
-    pageSize: 4 
-  }), []);
-
-  // Use the same API call pattern as article management page
+  // UNIFIED API CALL - Same parameters as ArticlesManagement page
   const allArticlesParams = useMemo(() => ({ 
-    country: "us", 
-    pageSize: 100 // Match the article management page
+    q: "technology",
+    pageSize: 100, // Same as ArticlesManagement
+    sortBy: "publishedAt",
   }), []);
 
-  // Single comprehensive API call for all articles (same as article management)
+  // Single API call for all data (same as ArticlesManagement)
   const {
     data: allArticles,
     isLoading: allArticlesLoading,
     error: allArticlesError,
-  } = useNewsData("top-headlines", allArticlesParams, []);
+  } = useNewsData("everything", allArticlesParams, []); // Use "everything" endpoint like ArticlesManagement
 
-  // Separate call for recent articles display
-  const {
-    data: recentArticles,
-    isLoading: articlesLoading,
-    error: articlesError,
-  } = useNewsData("top-headlines", recentArticlesParams, []);
-
-  // Calculate real metrics from API data
-  const calculatedMetrics = useMemo(() => {
+  // Transform all articles (same logic as ArticlesManagement)
+  const transformedArticles = useMemo(() => {
     if (!allArticles || allArticles.length === 0) {
+      return [];
+    }
+
+    return allArticles.map((article, index) => ({
+      id: index + 1,
+      title: article.title || "Untitled Article",
+      author: article.author || "Unknown Author",
+      publishedDate: article.publishedAt
+        ? article.publishedAt.split("T")[0]
+        : new Date().toISOString().split("T")[0],
+      date: article.publishedAt
+        ? article.publishedAt.split("T")[0]
+        : new Date().toISOString().split("T")[0],
+      type: "news",
+      status: "published",
+      thumbnail: article.urlToImage,
+      excerpt: article.description || "No description available",
+      url: article.url,
+      content: article.content || article.description || "No content available",
+      readTime: `${Math.max(1, Math.floor((article.content?.length || 500) / 500))} min read`,
+      views: Math.floor(Math.random() * 20000),
+      category: "Technology",
+      source: article.source?.name || "Unknown Source",
+    }));
+  }, [allArticles]);
+
+  // Get recent articles for display (only 4 articles)
+  const recentArticlesForDisplay = useMemo(() => {
+    if (!transformedArticles || transformedArticles.length === 0) {
+      return [];
+    }
+    
+    // Sort by date (newest first) and take only 4
+    const sortedArticles = [...transformedArticles]
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 4);
+    
+    return sortedArticles.map((article) => {
+      const sanitizedImageUrl = sanitizeImageUrl(article.thumbnail);
+      
+      return {
+        ...article,
+        thumbnail: sanitizedImageUrl || generatePlaceholderUrl(400, 250, 'News'),
+      };
+    });
+  }, [transformedArticles]);
+
+  // Calculate real metrics from ALL articles (same logic as ArticlesManagement)
+  const calculatedMetrics = useMemo(() => {
+    if (!transformedArticles || transformedArticles.length === 0) {
       return {
         totalArticles: 0,
         recentAdditions: 0,
@@ -100,21 +134,21 @@ const Dashboard = () => {
       };
     }
 
-    // Total articles count (should match article management page)
-    const totalArticles = allArticles.length;
+    // Total articles count (should match ArticlesManagement page exactly)
+    const totalArticles = transformedArticles.length;
 
     // Calculate recent additions (articles from last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
-    const recentAdditions = allArticles.filter(article => {
-      if (!article.publishedAt) return false;
-      const publishDate = new Date(article.publishedAt);
+    const recentAdditions = transformedArticles.filter(article => {
+      if (!article.date) return false;
+      const publishDate = new Date(article.date);
       return publishDate >= sevenDaysAgo;
     }).length;
 
-    // Calculate top authors (unique authors count)
-    const authors = allArticles
+    // Calculate top authors (unique authors count) - same logic as ArticlesManagement
+    const authors = transformedArticles
       .map(article => article.author)
       .filter(author => author && author !== 'Unknown Author' && author.trim() !== '')
       .filter((author, index, self) => self.indexOf(author) === index);
@@ -122,11 +156,12 @@ const Dashboard = () => {
     const topAuthors = authors.length;
 
     // Calculate pending reviews (articles without complete data)
-    const pendingReviews = allArticles.filter(article => 
-      !article.description || 
-      !article.urlToImage || 
+    const pendingReviews = transformedArticles.filter(article => 
+      !article.excerpt || 
+      !article.thumbnail || 
       article.title === '[Removed]' ||
-      article.description === '[Removed]'
+      article.excerpt === '[Removed]' ||
+      article.title.toLowerCase().includes('removed')
     ).length;
 
     return {
@@ -135,17 +170,17 @@ const Dashboard = () => {
       topAuthors,
       pendingReviews,
     };
-  }, [allArticles]);
+  }, [transformedArticles]);
 
-  // Calculate author performance from real data
+  // Calculate author performance from ALL articles
   const authorPerformance = useMemo(() => {
-    if (!allArticles || allArticles.length === 0) {
+    if (!transformedArticles || transformedArticles.length === 0) {
       return [];
     }
 
-    // Count articles by author
+    // Count articles by author (same logic as ArticlesManagement)
     const authorCounts = {};
-    allArticles.forEach(article => {
+    transformedArticles.forEach(article => {
       if (article.author && article.author !== 'Unknown Author' && article.author.trim() !== '') {
         const author = article.author.trim();
         authorCounts[author] = (authorCounts[author] || 0) + 1;
@@ -157,11 +192,11 @@ const Dashboard = () => {
       .map(([name, articles]) => ({ name, articles }))
       .sort((a, b) => b.articles - a.articles)
       .slice(0, 5); // Top 5 authors
-  }, [allArticles]);
+  }, [transformedArticles]);
 
-  // Calculate article trends from real data
+  // Calculate article trends from ALL articles
   const articleTrends = useMemo(() => {
-    if (!allArticles || allArticles.length === 0) {
+    if (!transformedArticles || transformedArticles.length === 0) {
       return [];
     }
 
@@ -179,9 +214,9 @@ const Dashboard = () => {
     }
 
     // Count articles for each date
-    allArticles.forEach(article => {
-      if (article.publishedAt) {
-        const publishDate = new Date(article.publishedAt);
+    transformedArticles.forEach(article => {
+      if (article.date) {
+        const publishDate = new Date(article.date);
         if (publishDate >= sevenDaysAgo) {
           const dateStr = publishDate.toISOString().split('T')[0];
           if (dateMap.hasOwnProperty(dateStr)) {
@@ -195,32 +230,7 @@ const Dashboard = () => {
       date,
       articles
     }));
-  }, [allArticles]);
-
-  // Transform recent articles data
-  const formattedArticles = useMemo(() => {
-    if (!recentArticles || recentArticles.length === 0) {
-      return [];
-    }
-    
-    return recentArticles.map((article, index) => {
-      const sanitizedImageUrl = sanitizeImageUrl(article.urlToImage);
-      
-      return {
-        id: index + 1,
-        title: article.title || "Untitled Article",
-        author: article.author || "Unknown Author",
-        publishedDate: article.publishedAt
-          ? article.publishedAt.split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        type: "news",
-        thumbnail: sanitizedImageUrl || generatePlaceholderUrl(400, 250, 'News'),
-        excerpt: article.description || "No description available",
-        url: article.url,
-        content: article.content || article.description || "No content available",
-      };
-    });
-  }, [recentArticles]);
+  }, [transformedArticles]);
 
   // Calculate trend percentages
   const getTrendPercentage = (current, previous) => {
@@ -243,8 +253,8 @@ const Dashboard = () => {
   }, [calculatedMetrics]);
 
   // Check if any data is loading
-  const isAnyLoading = articlesLoading || allArticlesLoading;
-  const hasAnyError = articlesError || allArticlesError;
+  const isAnyLoading = allArticlesLoading;
+  const hasAnyError = allArticlesError;
 
   // Simulate dashboard loading
   useEffect(() => {
@@ -254,7 +264,6 @@ const Dashboard = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
 
   const handleViewAllArticles = () => {
     navigate("/articles-management");
@@ -320,7 +329,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Main Content Area */}
             <div className="lg:col-span-3 space-y-8">
-              {/* Metrics Cards */}
+              {/* Metrics Cards - Based on ALL articles */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <MetricCard
                   title="Total Articles"
@@ -358,7 +367,7 @@ const Dashboard = () => {
                 />
               </div>
 
-              {/* Charts Section */}
+              {/* Charts Section - Based on ALL articles */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <TrendChart
                   title="Article Trends"
@@ -376,33 +385,33 @@ const Dashboard = () => {
                 />
               </div>
 
-              {/* Recent Articles Preview */}
+              {/* Recent Articles Preview - Only 4 articles displayed */}
               <div className="bg-surface rounded-lg shadow-sm border border-border p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-xl font-semibold text-text-primary">Recent Articles</h2>
                     <p className="text-text-secondary">
-                      {articlesLoading ? 'Loading latest content...' : 'Latest published content'}
+                      {isAnyLoading ? 'Loading latest content...' : `Latest ${recentArticlesForDisplay.length} published articles`}
                     </p>
                   </div>
                   <button
                     onClick={handleViewAllArticles}
                     className="text-primary hover:text-primary-700 font-medium flex items-center space-x-1 transition-colors duration-150"
                   >
-                    <span>View All</span>
+                    <span>View All ({calculatedMetrics.totalArticles})</span>
                     <Icon name="ArrowRight" size={16} />
                   </button>
                 </div>
 
                 {/* Articles Loading State */}
-                {articlesLoading ? (
+                {isAnyLoading ? (
                   <div className="text-center py-8">
                     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-text-secondary">Loading articles...</p>
                   </div>
-                ) : formattedArticles.length > 0 ? (
+                ) : recentArticlesForDisplay.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {formattedArticles.map((article) => (
+                    {recentArticlesForDisplay.map((article) => (
                       <ArticlePreviewCard
                         key={article.id}
                         article={article}
