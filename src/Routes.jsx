@@ -11,6 +11,7 @@ import ArticlesManagement from "pages/articles-management";
 import AnalyticsDashboard from "pages/analytics-dashboard";
 import PayoutManagementAdminOnly from "pages/payout-management-admin-only";
 import NotFound from "pages/NotFound";
+import ArticleDetail from './pages/ArticleDetail';
 
 // Protected route component
 const ProtectedRoute = ({ element }) => {
@@ -54,6 +55,7 @@ const Routes = () => {
           <Route path="/articles-management" element={<ProtectedRoute element={<ArticlesManagement />} />} />
           <Route path="/analytics-dashboard" element={<ProtectedRoute element={<AnalyticsDashboard />} />} />
           <Route path="/payout-management-admin-only" element={<ProtectedRoute element={<PayoutManagementAdminOnly />} />} />
+          <Route path="/article/:id" element={<ArticleDetail />} />
           <Route path="*" element={<NotFound />} />
         </RouterRoutes>
       </ErrorBoundary>

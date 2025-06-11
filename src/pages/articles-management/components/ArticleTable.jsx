@@ -10,7 +10,8 @@ const ArticleTable = ({
   onAction,
   sortBy,
   sortOrder,
-  onSort
+  onSort,
+  onRowClick
 }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
 
@@ -25,6 +26,14 @@ const ArticleTable = ({
       default:
         return 'bg-secondary-100 text-secondary-600';
     }
+  };
+
+  const handleRowClick = (article, e) => {
+    // Prevent navigation when clicking on action buttons or checkboxes
+    if (e.target.closest('button') || e.target.closest('input[type="checkbox"]')) {
+      return;
+    }
+    onRowClick?.(article);
   };
 
   const getTypeIcon = (type) => {
@@ -126,6 +135,7 @@ const ArticleTable = ({
                 className={`hover:bg-secondary-50 transition-colors duration-150 ${
                   selectedArticles.includes(article.id) ? 'bg-primary-50' : ''
                 }`}
+                onClick={(e) => handleRowClick(article, e)}
               >
                 <td className="px-4 py-4">
                   <button

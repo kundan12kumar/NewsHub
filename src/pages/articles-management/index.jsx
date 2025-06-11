@@ -1,204 +1,212 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Header from 'components/ui/Header';
-import Icon from 'components/AppIcon';
-import { useNewsData } from 'hooks/useNewsData';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Header from "components/ui/Header";
+import Icon from "components/AppIcon";
+import { useNewsData } from "hooks/useNewsData";
 
-import ArticleCard from './components/ArticleCard';
-import ArticleTable from './components/ArticleTable';
-import FilterSidebar from './components/FilterSidebar';
-import BulkActionsToolbar from './components/BulkActionsToolbar';
+import ArticleCard from "./components/ArticleCard";
+import ArticleTable from "./components/ArticleTable";
+import FilterSidebar from "./components/FilterSidebar";
+import BulkActionsToolbar from "./components/BulkActionsToolbar";
 
-// FIX 1: Move mockArticles OUTSIDE component to prevent recreation on every render
-const MOCK_ARTICLES = [
-  {
-    id: 1,
-    title: "Breaking: Major Tech Company Announces Revolutionary AI Breakthrough",
-    author: "Sarah Johnson",
-    date: "2024-01-15",
-    type: "news",
-    status: "published",
-    thumbnail: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop",
-    excerpt: "A groundbreaking development in artificial intelligence promises to transform how we interact with technology in our daily lives.",
-    readTime: "5 min read",
-    views: 12500,
-    category: "Technology"
-  },
-  {
-    id: 2,
-    title: "The Future of Remote Work: Trends and Predictions for 2024",
-    author: "Michael Chen",
-    date: "2024-01-14",
-    type: "blog",
-    status: "published",
-    thumbnail: "https://images.pexels.com/photos/4226140/pexels-photo-4226140.jpeg?w=400&h=250&fit=crop",
-    excerpt: "Exploring the evolving landscape of remote work and what organizations need to know to stay competitive.",
-    readTime: "8 min read",
-    views: 8750,
-    category: "Business"
-  },
-  {
-    id: 3,
-    title: "Climate Change Summit Reaches Historic Agreement",
-    author: "Emma Rodriguez",
-    date: "2024-01-13",
-    type: "news",
-    status: "published",
-    thumbnail: "https://images.pixabay.com/photo/2013/07/18/20/26/sea-164989_1280.jpg?w=400&h=250&fit=crop",
-    excerpt: "World leaders unite on ambitious climate targets in what experts call the most significant environmental agreement in decades.",
-    readTime: "6 min read",
-    views: 15200,
-    category: "Environment"
-  },
-  {
-    id: 4,
-    title: "Cryptocurrency Market Analysis: What Investors Need to Know",
-    author: "David Park",
-    date: "2024-01-12",
-    type: "blog",
-    status: "draft",
-    thumbnail: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&h=250&fit=crop",
-    excerpt: "A comprehensive analysis of current cryptocurrency trends and investment strategies for the modern portfolio.",
-    readTime: "12 min read",
-    views: 0,
-    category: "Finance"
-  },
-  {
-    id: 5,
-    title: "Healthcare Innovation: New Treatment Shows Promise",
-    author: "Dr. Lisa Thompson",
-    date: "2024-01-11",
-    type: "news",
-    status: "published",
-    thumbnail: "https://images.pexels.com/photos/3938023/pexels-photo-3938023.jpeg?w=400&h=250&fit=crop",
-    excerpt: "Medical researchers announce breakthrough treatment that could revolutionize patient care for chronic conditions.",
-    readTime: "7 min read",
-    views: 9800,
-    category: "Health"
-  },
-  {
-    id: 6,
-    title: "The Art of Digital Storytelling in Modern Marketing",
-    author: "Jennifer Walsh",
-    date: "2024-01-10",
-    type: "blog",
-    status: "published",
-    thumbnail: "https://images.pixabay.com/photo/2017/01/29/21/16/nurse-2017825_1280.jpg?w=400&h=250&fit=crop",
-    excerpt: "How brands are leveraging narrative techniques to create compelling digital experiences that resonate with audiences.",
-    readTime: "10 min read",
-    views: 6400,
-    category: "Marketing"
-  },
-  {
-    id: 7,
-    title: "Space Exploration Milestone: Mars Mission Update",
-    author: "Robert Kim",
-    date: "2024-01-09",
-    type: "news",
-    status: "published",
-    thumbnail: "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=400&h=250&fit=crop",
-    excerpt: "Latest developments from the Mars exploration mission reveal fascinating discoveries about the Red Planet's geology.",
-    readTime: "9 min read",
-    views: 18700,
-    category: "Science"
-  },
-  {
-    id: 8,
-    title: "Sustainable Fashion: The Rise of Eco-Conscious Brands",
-    author: "Maria Santos",
-    date: "2024-01-08",
-    type: "blog",
-    status: "review",
-    thumbnail: "https://images.pexels.com/photos/996329/pexels-photo-996329.jpeg?w=400&h=250&fit=crop",
-    excerpt: "Examining how fashion brands are embracing sustainability and what consumers can do to support ethical fashion choices.",
-    readTime: "11 min read",
-    views: 0,
-    category: "Lifestyle"
-  }
-];
+// Pagination component
+const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  itemsPerPage,
+  totalItems,
+}) => {
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+  const getVisiblePages = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, "...");
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push("...", totalPages);
+    } else {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
+  };
+
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 p-4 bg-surface rounded-lg border border-border">
+      <div className="text-sm text-text-secondary">
+        Showing {startItem} to {endItem} of {totalItems} articles
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-3 py-2 border border-border rounded-md hover:bg-secondary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+        >
+          <Icon name="ChevronLeft" size={16} />
+        </button>
+
+        {getVisiblePages().map((page, index) => (
+          <React.Fragment key={index}>
+            {page === "..." ? (
+              <span className="px-3 py-2 text-text-secondary">...</span>
+            ) : (
+              <button
+                onClick={() => onPageChange(page)}
+                className={`px-3 py-2 rounded-md transition-colors duration-150 ${
+                  currentPage === page
+                    ? "bg-primary text-white"
+                    : "border border-border hover:bg-secondary-50"
+                }`}
+              >
+                {page}
+              </button>
+            )}
+          </React.Fragment>
+        ))}
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-2 border border-border rounded-md hover:bg-secondary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+        >
+          <Icon name="ChevronRight" size={16} />
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2 text-sm">
+        <label htmlFor="itemsPerPage" className="text-text-secondary">
+          Items per page:
+        </label>
+        <select
+          id="itemsPerPage"
+          value={itemsPerPage}
+          onChange={(e) => onPageChange(1, parseInt(e.target.value))}
+          className="px-2 py-1 border border-border rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        >
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={50}>50</option>
+          <option value={100}>100</option>
+        </select>
+      </div>
+    </div>
+  );
+};
 
 const ArticlesManagement = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // State management
-  const [viewMode, setViewMode] = useState('card');
+  const [viewMode, setViewMode] = useState("card");
   const [selectedArticles, setSelectedArticles] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('date');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("date");
+  const [sortOrder, setSortOrder] = useState("desc");
   const [isLoading, setIsLoading] = useState(false);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
-  
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+
   // Filter states
   const [filters, setFilters] = useState({
     authors: [],
-    contentTypes: ['news', 'blog'],
+    contentTypes: ["news", "blog"],
     dateRange: {
-      start: '',
-      end: ''
+      start: "",
+      end: "",
     },
-    status: 'all'
+    status: "all",
   });
 
-  // FIX 2: Memoize news hook parameters to prevent unnecessary calls
-  const newsParams = useMemo(() => ({
-    q: 'technology',
-    pageSize: 20
-  }), []);
+  // Modified news hook parameters to fetch more articles
+  const newsParams = useMemo(
+    () => ({
+      q: "technology",
+      pageSize: 100, // Fetch more articles from API
+      sortBy: "publishedAt",
+    }),
+    []
+  );
 
   // Use news data hook with stable parameters
-  const { 
-    data: newsData, 
-    isLoading: isNewsLoading, 
-    usingMockData, 
-    error 
-  } = useNewsData('everything', newsParams, MOCK_ARTICLES);
+  const {
+    data: newsData,
+    isLoading: isNewsLoading,
+    error,
+  } = useNewsData("everything", newsParams);
 
-  // FIX 3: Optimize article transformation with proper dependencies
+  // Transform articles from NewsAPI
   const transformedArticles = useMemo(() => {
     if (!newsData || newsData.length === 0) {
-      return MOCK_ARTICLES;
-    }
-
-    if (usingMockData) {
-      return newsData;
+      return [];
     }
 
     return newsData.map((article, index) => ({
       id: index + 1,
-      title: article.title || 'Untitled Article',
-      author: article.author || 'Unknown Author',
-      date: article.publishedAt ? article.publishedAt.split('T')[0] : new Date().toISOString().split('T')[0],
-      type: 'news',
-      status: 'published',
-      thumbnail: article.urlToImage || 'https://via.placeholder.com/400x250',
-      excerpt: article.description || 'No description available',
-      readTime: `${Math.max(1, Math.floor((article.content?.length || 500) / 500))} min read`,
+      title: article.title || "Untitled Article",
+      author: article.author || "Unknown Author",
+      date: article.publishedAt
+        ? article.publishedAt.split("T")[0]
+        : new Date().toISOString().split("T")[0],
+      type: "news",
+      status: "published",
+      thumbnail: article.urlToImage || "https://via.placeholder.com/400x250",
+      excerpt: article.description || "No description available",
+      readTime: `${Math.max(
+        1,
+        Math.floor((article.content?.length || 500) / 500)
+      )} min read`,
       views: Math.floor(Math.random() * 20000),
-      category: 'Technology'
+      category: "Technology",
+      url: article.url,
+      source: article.source?.name || "Unknown Source",
     }));
-  }, [newsData, usingMockData]); // Removed MOCK_ARTICLES from dependencies since it's constant
+  }, [newsData]);
 
-  // FIX 4: Optimize available authors calculation
+  // Available authors calculation
   const availableAuthors = useMemo(() => {
     if (!transformedArticles || transformedArticles.length === 0) {
       return [];
     }
-    return [...new Set(transformedArticles.map(article => article.author))];
+    return [...new Set(transformedArticles.map((article) => article.author))];
   }, [transformedArticles]);
 
-  // FIX 5: Optimize filtering and sorting with better dependencies
+  // Filtering and sorting (without pagination)
   const filteredAndSortedArticles = useMemo(() => {
     if (!transformedArticles || transformedArticles.length === 0) {
       return [];
     }
 
-    let filtered = transformedArticles.filter(article => {
+    let filtered = transformedArticles.filter((article) => {
       // Search filter
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase();
-        const matchesSearch = 
+        const matchesSearch =
           article.title.toLowerCase().includes(searchLower) ||
           article.author.toLowerCase().includes(searchLower) ||
           article.excerpt.toLowerCase().includes(searchLower);
@@ -206,7 +214,10 @@ const ArticlesManagement = () => {
       }
 
       // Author filter
-      if (filters.authors.length > 0 && !filters.authors.includes(article.author)) {
+      if (
+        filters.authors.length > 0 &&
+        !filters.authors.includes(article.author)
+      ) {
         return false;
       }
 
@@ -224,7 +235,7 @@ const ArticlesManagement = () => {
       }
 
       // Status filter
-      if (filters.status !== 'all' && article.status !== filters.status) {
+      if (filters.status !== "all" && article.status !== filters.status) {
         return false;
       }
 
@@ -234,21 +245,21 @@ const ArticlesManagement = () => {
     // Sort articles
     filtered.sort((a, b) => {
       let aValue, bValue;
-      
+
       switch (sortBy) {
-        case 'title':
+        case "title":
           aValue = a.title.toLowerCase();
           bValue = b.title.toLowerCase();
           break;
-        case 'author':
+        case "author":
           aValue = a.author.toLowerCase();
           bValue = b.author.toLowerCase();
           break;
-        case 'date':
+        case "date":
           aValue = new Date(a.date);
           bValue = new Date(b.date);
           break;
-        case 'views':
+        case "views":
           aValue = a.views;
           bValue = b.views;
           break;
@@ -257,7 +268,7 @@ const ArticlesManagement = () => {
           bValue = new Date(b.date);
       }
 
-      if (sortOrder === 'asc') {
+      if (sortOrder === "asc") {
         return aValue > bValue ? 1 : -1;
       } else {
         return aValue < bValue ? 1 : -1;
@@ -267,78 +278,155 @@ const ArticlesManagement = () => {
     return filtered;
   }, [transformedArticles, searchQuery, filters, sortBy, sortOrder]);
 
-  // FIX 6: Handle URL search params only once on mount and location change
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredAndSortedArticles.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedArticles = filteredAndSortedArticles.slice(
+    startIndex,
+    endIndex
+  );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filters, sortBy, sortOrder]);
+
+  // Handle URL search params
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const searchParam = urlParams.get('search');
+    const searchParam = urlParams.get("search");
+    const pageParam = urlParams.get("page");
+
     if (searchParam && searchParam !== searchQuery) {
       setSearchQuery(searchParam);
     }
-  }, [location.search]); // Removed searchQuery from dependencies to prevent loop
 
-  // FIX 7: Use useCallback for event handlers to prevent child re-renders
+    if (pageParam && parseInt(pageParam) !== currentPage) {
+      setCurrentPage(parseInt(pageParam) || 1);
+    }
+  }, [location.search]);
+
+  // Update URL when page changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    if (currentPage > 1) {
+      urlParams.set("page", currentPage.toString());
+    } else {
+      urlParams.delete("page");
+    }
+
+    const newSearch = urlParams.toString();
+    const newUrl = `${location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+
+    if (newUrl !== `${location.pathname}${location.search}`) {
+      navigate(newUrl, { replace: true });
+    }
+  }, [currentPage, location.pathname, location.search, navigate]);
+
+  // Event handlers
+  const handleArticleClick = useCallback(
+    (article) => {
+      navigate(`/article/${article.id}`, {
+        state: {
+          article: article,
+        },
+      });
+    },
+    [navigate]
+  );
   const handleSelectArticle = useCallback((articleId) => {
-    setSelectedArticles(prev => 
-      prev.includes(articleId) 
-        ? prev.filter(id => id !== articleId)
+    setSelectedArticles((prev) =>
+      prev.includes(articleId)
+        ? prev.filter((id) => id !== articleId)
         : [...prev, articleId]
     );
   }, []);
 
   const handleSelectAll = useCallback(() => {
-    setSelectedArticles(prev => {
-      if (prev.length === filteredAndSortedArticles.length) {
+    setSelectedArticles((prev) => {
+      if (prev.length === paginatedArticles.length) {
         return [];
       } else {
-        return filteredAndSortedArticles.map(article => article.id);
+        return paginatedArticles.map((article) => article.id);
       }
     });
-  }, [filteredAndSortedArticles]);
+  }, [paginatedArticles]);
 
-  const handleBulkAction = useCallback((action) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      console.log(`Performing ${action} on articles:`, selectedArticles);
-      setSelectedArticles([]);
-      setIsLoading(false);
-    }, 1000);
-  }, [selectedArticles]);
+  const handleBulkAction = useCallback(
+    (action) => {
+      setIsLoading(true);
+      setTimeout(() => {
+        console.log(`Performing ${action} on articles:`, selectedArticles);
+        setSelectedArticles([]);
+        setIsLoading(false);
+      }, 1000);
+    },
+    [selectedArticles]
+  );
 
   const handleArticleAction = useCallback((action, articleId) => {
     console.log(`Performing ${action} on article:`, articleId);
   }, []);
 
-  // FIX 8: Memoize sort handler
-  const handleSort = useCallback((field) => {
-    if (sortBy === field) {
-      setSortOrder(current => current === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('asc');
-    }
-  }, [sortBy]);
+  const handleSort = useCallback(
+    (field) => {
+      if (sortBy === field) {
+        setSortOrder((current) => (current === "asc" ? "desc" : "asc"));
+      } else {
+        setSortBy(field);
+        setSortOrder("asc");
+      }
+    },
+    [sortBy]
+  );
 
-  // FIX 9: Memoize sort value for select
-  const sortValue = useMemo(() => `${sortBy}-${sortOrder}`, [sortBy, sortOrder]);
+  const sortValue = useMemo(
+    () => `${sortBy}-${sortOrder}`,
+    [sortBy, sortOrder]
+  );
 
   const handleSortChange = useCallback((e) => {
-    const [field, order] = e.target.value.split('-');
+    const [field, order] = e.target.value.split("-");
     setSortBy(field);
     setSortOrder(order);
   }, []);
 
+  // Pagination handlers
+  const handlePageChange = useCallback(
+    (page, newItemsPerPage = itemsPerPage) => {
+      if (newItemsPerPage !== itemsPerPage) {
+        setItemsPerPage(newItemsPerPage);
+        setCurrentPage(1);
+      } else {
+        setCurrentPage(page);
+      }
+      // Clear selections when changing pages
+      setSelectedArticles([]);
+    },
+    [itemsPerPage]
+  );
+
   // Error state handling
-  if (error && !usingMockData) {
+  if (error) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <div className="pt-16 flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <Icon name="AlertTriangle" size={48} className="mx-auto mb-4 text-red-500" />
-            <h2 className="text-xl font-semibold text-text-primary mb-2">Error Loading Articles</h2>
-            <p className="text-text-secondary mb-4">{error.message || "Something went wrong"}</p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <Icon
+              name="AlertTriangle"
+              size={48}
+              className="mx-auto mb-4 text-red-500"
+            />
+            <h2 className="text-xl font-semibold text-text-primary mb-2">
+              Error Loading Articles
+            </h2>
+            <p className="text-text-secondary mb-4">
+              {error.message || "Something went wrong"}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
               className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-700"
             >
               Retry
@@ -352,19 +440,17 @@ const ArticlesManagement = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Page Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-text-primary mb-2">Articles Management</h1>
-            <p className="text-text-secondary">Manage and organize your news articles and blog posts</p>
-            {usingMockData && (
-              <div className="mt-2 text-sm text-warning-600 bg-warning-50 px-3 py-1 rounded inline-flex items-center">
-                <Icon name="AlertTriangle" size={14} className="mr-1" />
-                Showing mock data due to API limitations
-              </div>
-            )}
+            <h1 className="text-3xl font-bold text-text-primary mb-2">
+              Articles Management
+            </h1>
+            <p className="text-text-secondary">
+              Manage and organize your news articles and blog posts
+            </p>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6">
@@ -396,7 +482,16 @@ const ArticlesManagement = () => {
 
                     {/* Results Count */}
                     <div className="text-sm text-text-secondary">
-                      <span className="font-medium text-text-primary">{filteredAndSortedArticles.length}</span> articles found
+                      <span className="font-medium text-text-primary">
+                        {filteredAndSortedArticles.length}
+                      </span>{" "}
+                      articles found
+                      {filteredAndSortedArticles.length > itemsPerPage && (
+                        <span className="ml-2">
+                          (showing {paginatedArticles.length} on page{" "}
+                          {currentPage} of {totalPages})
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -418,17 +513,21 @@ const ArticlesManagement = () => {
                     {/* View Toggle */}
                     <div className="flex items-center bg-secondary-100 rounded-md p-1">
                       <button
-                        onClick={() => setViewMode('card')}
+                        onClick={() => setViewMode("card")}
                         className={`p-2 rounded transition-colors duration-150 ${
-                          viewMode === 'card' ? 'bg-surface text-primary shadow-sm' : 'text-secondary-600 hover:text-text-primary'
+                          viewMode === "card"
+                            ? "bg-surface text-primary shadow-sm"
+                            : "text-secondary-600 hover:text-text-primary"
                         }`}
                       >
                         <Icon name="Grid3X3" size={16} />
                       </button>
                       <button
-                        onClick={() => setViewMode('table')}
+                        onClick={() => setViewMode("table")}
                         className={`p-2 rounded transition-colors duration-150 ${
-                          viewMode === 'table' ? 'bg-surface text-primary shadow-sm' : 'text-secondary-600 hover:text-text-primary'
+                          viewMode === "table"
+                            ? "bg-surface text-primary shadow-sm"
+                            : "text-secondary-600 hover:text-text-primary"
                         }`}
                       >
                         <Icon name="List" size={16} />
@@ -458,34 +557,65 @@ const ArticlesManagement = () => {
               ) : filteredAndSortedArticles.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Icon name="FileText" size={32} className="text-secondary-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-text-primary mb-2">No articles found</h3>
-                  <p className="text-text-secondary">Try adjusting your filters or search terms</p>
-                </div>
-              ) : viewMode === 'card' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {filteredAndSortedArticles.map((article) => (
-                    <ArticleCard
-                      key={article.id}
-                      article={article}
-                      isSelected={selectedArticles.includes(article.id)}
-                      onSelect={handleSelectArticle}
-                      onAction={handleArticleAction}
+                    <Icon
+                      name="FileText"
+                      size={32}
+                      className="text-secondary-400"
                     />
-                  ))}
+                  </div>
+                  <h3 className="text-lg font-medium text-text-primary mb-2">
+                    No articles found
+                  </h3>
+                  <p className="text-text-secondary">
+                    Try adjusting your filters or search terms
+                  </p>
                 </div>
+              ) : viewMode === "card" ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {paginatedArticles.map((article) => (
+                      <ArticleCard
+                        key={article.id}
+                        article={article}
+                        isSelected={selectedArticles.includes(article.id)}
+                        onSelect={handleSelectArticle}
+                        onAction={handleArticleAction}
+                        onClick={handleArticleClick} // Add this prop
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={filteredAndSortedArticles.length}
+                  />
+                </>
               ) : (
-                <ArticleTable
-                  articles={filteredAndSortedArticles}
-                  selectedArticles={selectedArticles}
-                  onSelectArticle={handleSelectArticle}
-                  onSelectAll={handleSelectAll}
-                  onAction={handleArticleAction}
-                  sortBy={sortBy}
-                  sortOrder={sortOrder}
-                  onSort={handleSort}
-                />
+                <>
+                  <ArticleTable
+                    articles={paginatedArticles}
+                    selectedArticles={selectedArticles}
+                    onSelectArticle={handleSelectArticle}
+                    onSelectAll={handleSelectAll}
+                    onAction={handleArticleAction}
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+
+                  {/* Pagination */}
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={filteredAndSortedArticles.length}
+                  />
+                </>
               )}
             </div>
           </div>
@@ -495,14 +625,16 @@ const ArticlesManagement = () => {
       {/* Mobile Filter Overlay */}
       {isMobileFiltersOpen && (
         <>
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
             onClick={() => setIsMobileFiltersOpen(false)}
           />
           <div className="fixed inset-y-0 left-0 w-80 bg-surface z-50 lg:hidden overflow-y-auto">
             <div className="p-4 border-b border-border">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-text-primary">Filters</h2>
+                <h2 className="text-lg font-semibold text-text-primary">
+                  Filters
+                </h2>
                 <button
                   onClick={() => setIsMobileFiltersOpen(false)}
                   className="p-2 hover:bg-secondary-100 rounded-md transition-colors duration-150"

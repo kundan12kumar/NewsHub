@@ -63,146 +63,58 @@ const Dashboard = () => {
     `)}`;
   };
 
-  // Mock data as fallback only
-  const mockDashboardMetrics = useMemo(() => ({
-    totalArticles: 1247,
-    recentAdditions: 23,
-    topAuthors: 8,
-    pendingReviews: 5,
-  }), []);
-
-  const mockRecentArticles = useMemo(() => [
-    {
-      id: 1,
-      title: "Breaking: Major Tech Conference Announces Revolutionary AI Breakthrough",
-      author: "Sarah Johnson",
-      publishedDate: "2024-01-15",
-      type: "news",
-      thumbnail: generatePlaceholderUrl(400, 250, 'Tech News'),
-      excerpt: "Industry leaders gather to discuss the latest developments in artificial intelligence technology that could reshape the future of computing.",
-      url: "https://example.com/tech-ai-breakthrough",
-      content: "Full article content would go here..."
-    },
-    {
-      id: 2,
-      title: "Climate Change Impact: New Research Reveals Alarming Ocean Temperature Rise",
-      author: "Dr. Michael Chen",
-      publishedDate: "2024-01-14",
-      type: "news",
-      thumbnail: generatePlaceholderUrl(400, 250, 'Climate News'),
-      excerpt: "Scientists from leading universities present compelling evidence of accelerated ocean warming patterns affecting marine ecosystems worldwide.",
-      url: "https://example.com/climate-ocean-temperature",
-      content: "Full article content would go here..."
-    },
-    {
-      id: 3,
-      title: "The Future of Remote Work: How Companies Are Adapting to Hybrid Models",
-      author: "Emily Rodriguez",
-      publishedDate: "2024-01-13",
-      type: "blog",
-      thumbnail: generatePlaceholderUrl(400, 250, 'Work Trends'),
-      excerpt: "An in-depth analysis of how organizations worldwide are implementing flexible work arrangements and the long-term implications for productivity.",
-      url: "https://example.com/remote-work-hybrid",
-      content: "Full article content would go here..."
-    },
-    {
-      id: 4,
-      title: "Sustainable Energy Solutions: Solar Power Efficiency Reaches New Heights",
-      author: "James Wilson",
-      publishedDate: "2024-01-12",
-      type: "news",
-      thumbnail: generatePlaceholderUrl(400, 250, 'Energy News'),
-      excerpt: "Latest innovations in photovoltaic technology promise to make solar energy more accessible and cost-effective for residential consumers.",
-      url: "https://example.com/solar-power-efficiency",
-      content: "Full article content would go here..."
-    },
-  ], []);
-
-  // API parameters for different data fetches
+  // API parameters - Using same parameters as article management page
   const recentArticlesParams = useMemo(() => ({ 
     country: "us", 
     pageSize: 4 
   }), []);
 
-  const totalArticlesParams = useMemo(() => ({ 
+  // Use the same API call pattern as article management page
+  const allArticlesParams = useMemo(() => ({ 
     country: "us", 
-    pageSize: 100 // Get more articles to calculate better metrics
+    pageSize: 100 // Match the article management page
   }), []);
 
-  const businessNewsParams = useMemo(() => ({ 
-    country: "us", 
-    category: "business",
-    pageSize: 50 
-  }), []);
-
-  const techNewsParams = useMemo(() => ({ 
-    country: "us", 
-    category: "technology",
-    pageSize: 50 
-  }), []);
-
-  // Multiple API calls for comprehensive data
-  const {
-    data: recentArticles,
-    isLoading: articlesLoading,
-    error: articlesError,
-    usingMockData: recentUsingMock,
-  } = useNewsData("top-headlines", recentArticlesParams, mockRecentArticles);
-
+  // Single comprehensive API call for all articles (same as article management)
   const {
     data: allArticles,
     isLoading: allArticlesLoading,
     error: allArticlesError,
-    usingMockData: allUsingMock,
-  } = useNewsData("top-headlines", totalArticlesParams, []);
+  } = useNewsData("top-headlines", allArticlesParams, []);
 
+  // Separate call for recent articles display
   const {
-    data: businessArticles,
-    isLoading: businessLoading,
-    error: businessError,
-    usingMockData: businessUsingMock,
-  } = useNewsData("top-headlines", businessNewsParams, []);
-
-  const {
-    data: techArticles,
-    isLoading: techLoading,
-    error: techError,
-    usingMockData: techUsingMock,
-  } = useNewsData("top-headlines", techNewsParams, []);
+    data: recentArticles,
+    isLoading: articlesLoading,
+    error: articlesError,
+  } = useNewsData("top-headlines", recentArticlesParams, []);
 
   // Calculate real metrics from API data
   const calculatedMetrics = useMemo(() => {
-    if (allUsingMock || !allArticles) {
-      return mockDashboardMetrics;
+    if (!allArticles || allArticles.length === 0) {
+      return {
+        totalArticles: 0,
+        recentAdditions: 0,
+        topAuthors: 0,
+        pendingReviews: 0,
+      };
     }
 
-    // Combine all articles for comprehensive analysis
-    const combinedArticles = [
-      ...(allArticles || []),
-      ...(businessArticles || []),
-      ...(techArticles || [])
-    ];
-
-    // Remove duplicates by URL
-    const uniqueArticles = combinedArticles.filter((article, index, self) =>
-      index === self.findIndex(a => a.url === article.url)
-    );
-
-    // Calculate total articles
-    const totalArticles = uniqueArticles.length;
+    // Total articles count (should match article management page)
+    const totalArticles = allArticles.length;
 
     // Calculate recent additions (articles from last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
-    const recentAdditions = uniqueArticles.filter(article => {
+    const recentAdditions = allArticles.filter(article => {
       if (!article.publishedAt) return false;
       const publishDate = new Date(article.publishedAt);
       return publishDate >= sevenDaysAgo;
     }).length;
 
     // Calculate top authors (unique authors count)
-    const authors = uniqueArticles
+    const authors = allArticles
       .map(article => article.author)
       .filter(author => author && author !== 'Unknown Author' && author.trim() !== '')
       .filter((author, index, self) => self.indexOf(author) === index);
@@ -210,7 +122,7 @@ const Dashboard = () => {
     const topAuthors = authors.length;
 
     // Calculate pending reviews (articles without complete data)
-    const pendingReviews = uniqueArticles.filter(article => 
+    const pendingReviews = allArticles.filter(article => 
       !article.description || 
       !article.urlToImage || 
       article.title === '[Removed]' ||
@@ -223,30 +135,17 @@ const Dashboard = () => {
       topAuthors,
       pendingReviews,
     };
-  }, [allArticles, businessArticles, techArticles, allUsingMock, mockDashboardMetrics]);
+  }, [allArticles]);
 
   // Calculate author performance from real data
   const authorPerformance = useMemo(() => {
-    if (allUsingMock || !allArticles) {
-      return [
-        { name: "Sarah Johnson", articles: 45 },
-        { name: "Dr. Michael Chen", articles: 38 },
-        { name: "Emily Rodriguez", articles: 32 },
-        { name: "James Wilson", articles: 28 },
-        { name: "Lisa Thompson", articles: 24 },
-      ];
+    if (!allArticles || allArticles.length === 0) {
+      return [];
     }
-
-    // Combine all articles for author analysis
-    const combinedArticles = [
-      ...(allArticles || []),
-      ...(businessArticles || []),
-      ...(techArticles || [])
-    ];
 
     // Count articles by author
     const authorCounts = {};
-    combinedArticles.forEach(article => {
+    allArticles.forEach(article => {
       if (article.author && article.author !== 'Unknown Author' && article.author.trim() !== '') {
         const author = article.author.trim();
         authorCounts[author] = (authorCounts[author] || 0) + 1;
@@ -258,28 +157,13 @@ const Dashboard = () => {
       .map(([name, articles]) => ({ name, articles }))
       .sort((a, b) => b.articles - a.articles)
       .slice(0, 5); // Top 5 authors
-  }, [allArticles, businessArticles, techArticles, allUsingMock]);
+  }, [allArticles]);
 
   // Calculate article trends from real data
   const articleTrends = useMemo(() => {
-    if (allUsingMock || !allArticles) {
-      return [
-        { date: "2024-01-09", articles: 12 },
-        { date: "2024-01-10", articles: 15 },
-        { date: "2024-01-11", articles: 8 },
-        { date: "2024-01-12", articles: 18 },
-        { date: "2024-01-13", articles: 22 },
-        { date: "2024-01-14", articles: 16 },
-        { date: "2024-01-15", articles: 25 },
-      ];
+    if (!allArticles || allArticles.length === 0) {
+      return [];
     }
-
-    // Combine all articles for trend analysis
-    const combinedArticles = [
-      ...(allArticles || []),
-      ...(businessArticles || []),
-      ...(techArticles || [])
-    ];
 
     // Group articles by date (last 7 days)
     const dateMap = {};
@@ -295,7 +179,7 @@ const Dashboard = () => {
     }
 
     // Count articles for each date
-    combinedArticles.forEach(article => {
+    allArticles.forEach(article => {
       if (article.publishedAt) {
         const publishDate = new Date(article.publishedAt);
         if (publishDate >= sevenDaysAgo) {
@@ -311,15 +195,15 @@ const Dashboard = () => {
       date,
       articles
     }));
-  }, [allArticles, businessArticles, techArticles, allUsingMock]);
+  }, [allArticles]);
 
   // Transform recent articles data
   const formattedArticles = useMemo(() => {
-    if (recentUsingMock) {
-      return recentArticles || [];
+    if (!recentArticles || recentArticles.length === 0) {
+      return [];
     }
     
-    return recentArticles?.map((article, index) => {
+    return recentArticles.map((article, index) => {
       const sanitizedImageUrl = sanitizeImageUrl(article.urlToImage);
       
       return {
@@ -335,8 +219,8 @@ const Dashboard = () => {
         url: article.url,
         content: article.content || article.description || "No content available",
       };
-    }) || [];
-  }, [recentArticles, recentUsingMock]);
+    });
+  }, [recentArticles]);
 
   // Calculate trend percentages
   const getTrendPercentage = (current, previous) => {
@@ -351,17 +235,16 @@ const Dashboard = () => {
     const previousWeekArticles = Math.max(1, Math.floor(currentWeekArticles * 0.8)); // Simulated previous week
     
     return {
-      totalArticlesTrend: getTrendPercentage(calculatedMetrics.totalArticles, calculatedMetrics.totalArticles * 0.9),
+      totalArticlesTrend: getTrendPercentage(calculatedMetrics.totalArticles, Math.floor(calculatedMetrics.totalArticles * 0.9)),
       recentAdditionsTrend: getTrendPercentage(currentWeekArticles, previousWeekArticles),
       topAuthorsTrend: calculatedMetrics.topAuthors > 5 ? "Growing" : "Stable",
-      pendingReviewsTrend: calculatedMetrics.pendingReviews,
+      pendingReviewsTrend: `${calculatedMetrics.pendingReviews} items`,
     };
   }, [calculatedMetrics]);
 
   // Check if any data is loading
-  const isAnyLoading = articlesLoading || allArticlesLoading || businessLoading || techLoading;
-  const hasAnyError = articlesError || allArticlesError || businessError || techError;
-  const isUsingAnyMockData = recentUsingMock || allUsingMock || businessUsingMock || techUsingMock;
+  const isAnyLoading = articlesLoading || allArticlesLoading;
+  const hasAnyError = articlesError || allArticlesError;
 
   // Simulate dashboard loading
   useEffect(() => {
@@ -372,9 +255,6 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleAddArticle = () => {
-    navigate("/articles-management?action=add");
-  };
 
   const handleViewAllArticles = () => {
     navigate("/articles-management");
@@ -422,16 +302,16 @@ const Dashboard = () => {
               <p className="text-text-secondary">
                 Welcome back! Here's what's happening with your content.
               </p>
-              {isUsingAnyMockData && (
-                <div className="mt-2 text-sm text-warning-600 bg-warning-50 px-3 py-1 rounded inline-flex items-center">
-                  <Icon name="AlertTriangle" size={14} className="mr-1" />
-                  {isAnyLoading ? 'Loading live data...' : 'Some data unavailable - showing mixed real/sample data'}
+              {isAnyLoading && (
+                <div className="mt-2 text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded inline-flex items-center">
+                  <Icon name="Loader" size={14} className="mr-1 animate-spin" />
+                  Loading latest data...
                 </div>
               )}
               {hasAnyError && (
                 <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-1 rounded inline-flex items-center">
                   <Icon name="AlertTriangle" size={14} className="mr-1" />
-                  API Error - Using available data
+                  Error loading data - Please try again
                 </div>
               )}
             </div>
@@ -471,7 +351,7 @@ const Dashboard = () => {
                   title="Pending Reviews"
                   value={calculatedMetrics.pendingReviews}
                   icon="Clock"
-                  trend={`${calculatedMetrics.pendingReviews} items`}
+                  trend={metricTrends.pendingReviewsTrend}
                   trendDirection={calculatedMetrics.pendingReviews > 20 ? "up" : "down"}
                   subtitle="Need attention"
                   loading={isAnyLoading}
