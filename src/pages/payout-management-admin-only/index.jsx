@@ -10,10 +10,25 @@ import { useNewsData } from "hooks/useNewsData";
 
 const PayoutManagementAdminOnly = () => {
   const navigate = useNavigate();
-  const [payoutRates, setPayoutRates] = useState({
-    newsArticle: { basic: 50, premium: 75, featured: 100 },
-    blogPost: { basic: 40, premium: 60, featured: 80 },
+  
+  // Initialize payout rates from localStorage or use defaults
+  const [payoutRates, setPayoutRates] = useState(() => {
+    try {
+      const savedRates = localStorage.getItem('payoutRates');
+      if (savedRates) {
+        return JSON.parse(savedRates);
+      }
+    } catch (error) {
+      console.error('Error loading payout rates from localStorage:', error);
+    }
+    
+    // Default rates if nothing in localStorage or error occurred
+    return {
+      newsArticle: { basic: 50, premium: 75, featured: 100 },
+      blogPost: { basic: 40, premium: 60, featured: 80 },
+    };
   });
+
   const [selectedAuthors, setSelectedAuthors] = useState([]);
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [paymentStatus, setPaymentStatus] = useState("all");
@@ -204,8 +219,16 @@ const PayoutManagementAdminOnly = () => {
 
   const handleRateUpdate = (newRates) => {
     setPayoutRates(newRates);
-    // In a real app, this would save to localStorage
-    // localStorage.setItem('payoutRates', JSON.stringify(newRates));
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('payoutRates', JSON.stringify(newRates));
+      console.log('Payout rates saved to localStorage:', newRates);
+    } catch (error) {
+      console.error('Error saving payout rates to localStorage:', error);
+      // Optionally, you could show a toast notification or alert to the user
+      // that the rates couldn't be saved
+    }
   };
 
   const handleBulkStatusUpdate = (authorIds, newStatus) => {
