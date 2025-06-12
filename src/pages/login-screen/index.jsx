@@ -21,7 +21,7 @@ const LoginScreen = () => {
     manager: { email: "manager@newshub.com", password: "manager123" },
   };
 
-  // Google OAuth configuration - REPLACE WITH YOUR ACTUAL CLIENT ID
+  // Google OAuth configuration - REPLACE WITH YOUR ACTUAL CLIENT ID - if want to use this then rin this in http://localhost:4028
   const GOOGLE_CLIENT_ID ="137303626540-bioipt09v1q2fasciecc8bom5qcipc7r.apps.googleusercontent.com";
 
   // Check if user is already logged in
